@@ -1,0 +1,19 @@
+# Node modules
+node_modules/
+
+# Environment files
+.env
+
+# Build and output directories
+dist/
+build/
+.next/
+
+# Logs and temporary files
+*.log
+logs/
+
+# OS and IDE files
+.DS_Store
+Thumbs.db
+.vscode/
