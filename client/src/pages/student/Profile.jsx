@@ -180,4 +180,3 @@ const Profile = () => {
 };
 
 export default Profile;
-//finally corected the git issue
