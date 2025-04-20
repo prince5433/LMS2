@@ -2,6 +2,9 @@ import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useNavigate } from 'react-router-dom'
+import { useGetCreatorCoursesQuery } from '@/features/api/courseApi'
+import { Badge } from '@/components/ui/badge'
+import { Edit } from "lucide-react";
 
 const invoices = [
   {
@@ -49,7 +52,14 @@ const invoices = [
 ]
 
 const CourseTable = () => {
+  const {data,isLoading} = useGetCreatorCoursesQuery();
   const navigate = useNavigate();
+
+  if(isLoading) {
+    return <p>Loading...</p>;
+  }
+  console.log(data);
+  // Check if data is available and has courses
   return (
     <div>
       <Button onClick={() => navigate('create')} className="mb-4">
@@ -58,7 +68,7 @@ const CourseTable = () => {
       </Button>
       {/* Table component to display courses */}
       <Table>
-        <TableCaption>A list of your recent invoices.</TableCaption>
+        <TableCaption>A list of your recent Courses.</TableCaption>
         <TableHeader>
           <TableRow>
             <TableHead className="w-[100px]">Price</TableHead>
@@ -68,21 +78,18 @@ const CourseTable = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {invoices.map((invoice) => (
-            <TableRow key={invoice.invoice}>
-              <TableCell className="font-medium">{invoice.invoice}</TableCell>
-              <TableCell>{invoice.paymentStatus}</TableCell>
-              <TableCell>{invoice.paymentMethod}</TableCell>
-              <TableCell className="text-right">{invoice.totalAmount}</TableCell>
+          {/* Map through the courses and display each one in a table row */}
+          {data.courses.map((course) => (
+            <TableRow key={course._id}>
+              <TableCell className="font-medium">{course?.coursePrice || "N/A"}</TableCell>
+              <TableCell><Badge>{course.isPublished ? "Published" : "Draft"}</Badge></TableCell>
+              <TableCell>{course.courseTitle}</TableCell>
+              <TableCell className="text-right">
+                <Button size="sm" variant="ghost" onClick={() => navigate(`${course._id}`)}><Edit/></Button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
-        <TableFooter>
-          <TableRow>
-            <TableCell colSpan={3}>Total</TableCell>
-            <TableCell className="text-right">$2,500.00</TableCell>
-          </TableRow>
-        </TableFooter>
       </Table>
     </div>
   )
