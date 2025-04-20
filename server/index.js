@@ -1,12 +1,15 @@
 //basic express server setup
-import express from 'express';
-import dotenv from 'dotenv';
-import connectDB from './database/db.js';
-import userRoute from './routes/user.route.js';
-import cookieParser from 'cookie-parser';
-import cors from 'cors';
-import router from './routes/user.route.js';
-import morgan from 'morgan';
+import express from "express";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import connectDB from "./database/db.js";
+import userRoute from "./routes/user.route.js";
+import courseRoute from "./routes/course.route.js";
+import morgan from "morgan";
+
+
+
 dotenv.config();
 
 
@@ -30,6 +33,7 @@ app.use(cors({//cors middleware use hota hai to allow cross-origin requests
 //apis aayegi
 //middleware
 app.use("/api/v1/user",userRoute);
+app.use("/api/v1/course",courseRoute);
 
 
 

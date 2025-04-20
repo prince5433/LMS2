@@ -1,5 +1,5 @@
 import {createApi,fetchBaseQuery} from '@reduxjs/toolkit/query/react';
-import { userLoggednIn } from '../authSlice';
+import { userLoggedIn } from '../authSlice';
 
 const USER_API="http://localhost:8080/api/v1/user/";
 
@@ -19,16 +19,16 @@ export const authApi = createApi({
     }),
     loginUser: builder.mutation({
         query: (inputData) => ({
-            url: 'login',
-            method: 'POST',
-            body: inputData,
+            url:"login",
+            method:"POST",
+            body:inputData
         }),
-        async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        async onQueryStarted(_, {queryFulfilled, dispatch}) {
             try {
-                const { result } = await queryFulfilled;
-                dispatch(userLoggednIn({user:result.data.user}));
-            } catch (err) {
-                console.log(err);
+                const result = await queryFulfilled;
+                dispatch(userLoggedIn({user:result.data.user}));
+            } catch (error) {
+                console.log(error);
             }
         }
     }),
@@ -37,20 +37,29 @@ export const authApi = createApi({
             url: 'logout',
             method: 'GET',
         }),
-        // async onQueryStarted(_, { dispatch, queryFulfilled }) {
-        //     try {
-        //         await queryFulfilled;
-        //         dispatch(userLoggednIn({user:{}}));
-        //     } catch (err) {
-        //         console.log(err);
-        //     }
-        // }
+      //taki logout krne ke baad user logged out ho jaye
+      async onQueryStarted(_, {queryFulfilled, dispatch}) {
+        try { 
+            dispatch(userLoggedOut());
+        } catch (error) {
+            console.log(error);
+        }
+    }
     }),
     loadUser: builder.query({
         query: () => ({
             url: 'profile',
             method: 'GET',
         }),
+        async onQueryStarted(_, { dispatch, queryFulfilled }) {
+            try {
+                const  result  = await queryFulfilled;
+                dispatch(userLoggedIn({user:result.data.user}));
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
     }),
     updateUser: builder.mutation({
         query: (formData) => ({

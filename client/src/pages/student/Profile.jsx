@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import Course from "./Course";
 import {
     useLoadUserQuery,
@@ -56,6 +56,10 @@ const Profile = () => {
         await updateUser(formData);// This will send the request to /profile/update
     };
 
+    useEffect(() => {
+        refetch();
+    }, []);
+
 
     useEffect(() => {
         if(isSuccess){
@@ -72,8 +76,8 @@ const Profile = () => {
     const  user = data&& data.user;
 
     return (
-        <div className="max-w-4xl mx-auto px-4 my-10">
-            <h1 className="font-bold text-2xl text-center md:text-left">PROFILE</h1>
+        <div className="max-w-4xl mx-auto px-4 my-10 pt-16">
+            <h1 className="font-bold text-2xl text-center md:text-left mb-6">PROFILE</h1>
             <div className="flex flex-col md:flex-row items-center md:items-start gap-8 my-5">
                 <div className="flex flex-col items-center">
                     <Avatar className="h-24 w-24 md:h-32 md:w-32 mb-4">

@@ -11,7 +11,7 @@ const authSlice = createSlice({
     //initial state of the slice
     initialState,
     reducers:{  //reducers are functions that take the current state and an action as arguments and return a new state.
-        userLoggednIn:(state,action)=>{
+        userLoggedIn:(state,action)=>{
             state.user=action.payload.user;//set the user to the payload of the action
             state.isAuthenticated=true;//set the isAuthenticated to true
         },
@@ -24,5 +24,5 @@ const authSlice = createSlice({
         // },
     }
 });
-export const {userLoggednIn,userLoggedOut,setUser} = authSlice.actions;//export the actions of the slice
+export const {userLoggedIn,userLoggedOut,setUser} = authSlice.actions;//export the actions of the slice
 export default authSlice.reducer;//export the reducer of the slice
