@@ -1,6 +1,7 @@
 import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useNavigate } from 'react-router-dom'
 
 const invoices = [
   {
@@ -48,9 +49,11 @@ const invoices = [
 ]
 
 const CourseTable = () => {
+  const navigate = useNavigate();
   return (
     <div>
-      <Button>
+      <Button onClick={() => navigate('create')} className="mb-4">
+        {/* Button to create a new course */}
         Create a new Course
       </Button>
       {/* Table component to display courses */}
