@@ -1,5 +1,5 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -7,10 +7,14 @@ import { Textarea } from '@/components/Textarea'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useEditCourseMutation } from '@/features/api/courseApi'
+import { toast } from 'sonner'
+import { useParams } from 'react-router-dom'
+
 
 const CourseTab = () => {
     const isPublished = true; // Dummy variable to check if the course is published or not
-    const isLoading=false; // Dummy variable to check if the course is loading or not
+    // const isLoading = false; // Dummy variable to check if the course is loading or not
 
     const [input, setInput] = useState({
         courseTitle: "",
@@ -24,13 +28,17 @@ const CourseTab = () => {
     const [previewThumbnail, setPreviewThumbnail] = useState("");
 
     const navigate = useNavigate();
+    const params=useParams();
+    const courseId=params.courseId;
+
+    const [editCourse, { isLoading, data, isSuccess, error }] = useEditCourseMutation();
 
     const changeEventHandler = (e) => {
         const { name, value } = e.target;
         setInput({ ...input, [name]: value });
     }
 
-    const selectCategory= (value) => {
+    const selectCategory = (value) => {
         setInput({ ...input, category: value });
     }
 
@@ -40,13 +48,36 @@ const CourseTab = () => {
     //get file
     const selectThumbnail = (e) => {
         const file = e.target.files?.[0];
-        if(file){
-        setInput({ ...input, courseThumbnail: file });
-        const fileReader = new FileReader();
-        fileReader.onloadend = () => setPreviewThumbnail(fileReader.result);
-        fileReader.readAsDataURL(file);
+        if (file) {
+            setInput({ ...input, courseThumbnail: file });
+            const fileReader = new FileReader();
+            fileReader.onloadend = () => setPreviewThumbnail(fileReader.result);
+            fileReader.readAsDataURL(file);
         }
     }
+
+    const updateCourseHandler = async () => {
+        // Add your update course logic here
+        const formData = new FormData();
+        formData.append("courseTitle", input.courseTitle);
+        formData.append("subTitle", input.subTitle);
+        formData.append("description", input.description);
+        formData.append("courseLevel", input.courseLevel);
+        formData.append("coursePrice", input.coursePrice);
+        formData.append("category", input.category);
+        formData.append("courseThumbnail", input.courseThumbnail);
+        await editCourse({formData,courseId});
+    }
+
+    useEffect(() => {
+        if (isSuccess) {
+            toast.success(data.message || "Course Updated Successfully");
+        }
+        if (error) {
+            toast.error(error.data.message || "Course Update Failed");
+        }
+    }
+        , [isSuccess, error]);
 
     return (
         <Card>
@@ -152,36 +183,36 @@ const CourseTab = () => {
                         </div>
                     </div>
                     <div>
-                            <Label>Thumbnail</Label>
-                            <Input
-                                type='file'
-                                accept='image/*'
-                                name='courseThumbnail'
-                                onChange={selectThumbnail}
-                                className="w-fit mt-2"
-                            />
+                        <Label>Thumbnail</Label>
+                        <Input
+                            type='file'
+                            accept='image/*'
+                            name='courseThumbnail'
+                            onChange={selectThumbnail}
+                            className="w-fit mt-2"
+                        />
+                        {
+                            previewThumbnail && (
+                                <img src={previewThumbnail} alt="Course Thumbnail" className="mt-2 w-32 h-32 object-cover" />
+                            )
+                        }
+                    </div>
+                    <div>
+                        <Button variant="outline" onClick={() => navigate("/admin/course")}>Cancel</Button>
+                        <Button disabled={isLoading} onClick={updateCourseHandler} className="ml-2">
                             {
-                                previewThumbnail && (
-                                    <img src={previewThumbnail} alt="Course Thumbnail" className="mt-2 w-32 h-32 object-cover" />
+                                isLoading ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Please Wait
+                                    </>
+                                ) : (
+                                    "Save Changes"
                                 )
                             }
-                        </div>
-                        <div>
-                            <Button variant="outline" onClick={() => navigate("/admin/course")}>Cancel</Button>
-                            <Button disabled={isLoading} className="ml-2">
-                                {
-                                    isLoading ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            Please Wait
-                                        </>
-                                    ) : (
-                                        "Save Changes"
-                                    )
-                                }
-                            </Button>
+                        </Button>
 
-                        </div>
+                    </div>
                 </div>
             </CardContent>
         </Card>

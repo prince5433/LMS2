@@ -23,7 +23,15 @@ export const courseApi = createApi({
             }),
             providesTags: ['Refetch Creator Course '],
         }),
+        editCourse: builder.mutation({
+            query: ({formData,courseId}) => ({
+                url: `/${courseId}`,
+                method: 'PUT',
+                body: formData,
+            }),
+            invalidatesTags: ['Refetch Creator Course '],
+        }),
     }),
 });
 
-export const { useCreateCourseMutation, useGetCreatorCoursesQuery } = courseApi;
+export const { useCreateCourseMutation, useGetCreatorCoursesQuery, useEditCourseMutation } = courseApi;
