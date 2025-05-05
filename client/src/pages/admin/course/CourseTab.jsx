@@ -1,5 +1,5 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
-import React, { useEffect, useState } from 'react'
+import React, { use, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -7,7 +7,7 @@ import { Textarea } from '@/components/Textarea'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { useEditCourseMutation } from '@/features/api/courseApi'
+import { useEditCourseMutation, useGetCourseByIdQuery } from '@/features/api/courseApi'
 import { toast } from 'sonner'
 import { useParams } from 'react-router-dom'
 
@@ -25,11 +25,34 @@ const CourseTab = () => {
         category: "",
         courseThumbnail: "",
     });
+
+    const params=useParams();
+    const courseId=params.courseId;
+
+    const {data:courseByIdData,isLoading:courseByIdLoading}=useGetCourseByIdQuery(courseId);
+
+ 
+
+    useEffect(() => {
+        if (courseByIdData?.course) {
+            const course=courseByIdData?.course;
+            setInput({
+                courseTitle: course.courseTitle,
+                subTitle: course.subTitle,
+                description: course.description,
+                courseLevel: course.courseLevel,
+                coursePrice: course.coursePrice,
+                category: course.category,
+                courseThumbnail: course.courseThumbnail,
+            });
+            setPreviewThumbnail(course.courseThumbnail);
+        }
+    }, [courseByIdData]);
+
     const [previewThumbnail, setPreviewThumbnail] = useState("");
 
     const navigate = useNavigate();
-    const params=useParams();
-    const courseId=params.courseId;
+
 
     const [editCourse, { isLoading, data, isSuccess, error }] = useEditCourseMutation();
 
@@ -78,6 +101,8 @@ const CourseTab = () => {
         }
     }
         , [isSuccess, error]);
+        
+        if(courseByIdLoading) return <h1 className='text-center text-2xl font-bold'>Loading...</h1>
 
     return (
         <Card>

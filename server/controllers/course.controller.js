@@ -93,3 +93,27 @@ export const editCourse = async (req, res) => {
         })
     }
 }
+
+export const getCourseById = async (req, res) => {
+    try {
+        const courseId = req.params.courseId; // Get the course ID from the request parameters
+        const course = await Course.findById(courseId); // Find the course by ID
+        if (!course) {
+            return res.status(404).json({
+                success: false,
+                message: "Course not found"
+            })
+        }
+        return res.status(200).json({
+            success: true,
+            message: "Course fetched successfully",
+            course
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to get course by id"
+        })
+    }
+}
