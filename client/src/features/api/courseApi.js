@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
+
 const COURSE_API = 'http://localhost:8080/api/v1/course/';
 
 export const courseApi = createApi({
@@ -38,7 +39,15 @@ export const courseApi = createApi({
             }),
             providesTags: ['Refetch Creator Course '],
         }),
-    }),
+        createLecture: builder.mutation({
+            query: ({ lectureTitle, courseId }) => ({
+                url: `/${courseId}/lecture`,
+                method: 'POST',
+                body: { lectureTitle },
+            }),
+            invalidatesTags: ['Refetch Creator Course '],
+        })
+    })
 });
 
-export const { useCreateCourseMutation, useGetCreatorCoursesQuery, useEditCourseMutation, useGetCourseByIdQuery } = courseApi;
+export const { useCreateCourseMutation, useGetCreatorCoursesQuery, useEditCourseMutation, useGetCourseByIdQuery,useCreateLectureMutation } = courseApi;
