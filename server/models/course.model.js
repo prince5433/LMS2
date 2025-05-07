@@ -1,50 +1,47 @@
-import mongoose from "mongoose";
+import mongoose from "mongoose"
 
 const courseSchema = new mongoose.Schema({
     courseTitle:{
         type:String,
-        required:true,  
+        required:true
     },
-    subTitle:{
-        type:String,
-    },
-    description:{
-        type:String,
-    },
+    subTitle: {type:String}, 
+    description:{ type:String},
     category:{
         type:String,
-        required:true,
+        required:true
     },
     courseLevel:{
         type:String,
-        enum:["beginner","intermediate","advance"],
+        enum:["Beginner", "Medium", "Advance"]
     },
     coursePrice:{
-        type:Number,
+        type:Number
+    },
+    courseThumbnail:{
+        type:String
     },
     enrolledStudents:[
         {
             type:mongoose.Schema.Types.ObjectId,
-            ref:'User',
+            ref:'User'
         }
     ],
     lectures:[
         {
             type:mongoose.Schema.Types.ObjectId,
-            ref:'Lecture',
+            ref:"Lecture"
         }
     ],
     creator:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:'User',
+        ref:'User'
     },
     isPublished:{
         type:Boolean,
-        default:false,
+        default:false
     }
 
-}
-    ,
-    {timestamps:true});   //timestamps set to true to add createdAt and updatedAt fields
-  
-export const Course = mongoose.model("Course",courseSchema);
+}, {timestamps:true});
+
+export const Course = mongoose.model("Course", courseSchema);
