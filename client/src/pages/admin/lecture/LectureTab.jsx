@@ -3,6 +3,7 @@ import { Card, CardDescription, CardHeader, CardTitle, CardContent } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 
 const LectureTab = () => {
     return (
@@ -26,8 +27,25 @@ const LectureTab = () => {
                         placeholder='Your TItle Name'
                     />
                 </div>
+                <div className='my-5'>
+                    <Label>Video <span className='text-red-500'>*</span></Label>
+                    <Input
+                        type='file'
+                        placeholder='Your TItle Name'
+                        accept="video/*"
+                        className='w-fit'
+                    />
+                </div>
+                <div className='flex items-center space-x-2 my-5'>
+                <Switch id="airplane-mode" />
+                <Label htmlFor="airplane-mode">Is this video FREE</Label>
+                </div>
+                <div className='mt-4'>
+                    <Button>
+                        Update Lecture
+                    </Button>
+                </div>
             </CardContent>
-
         </Card>
     )
 }
