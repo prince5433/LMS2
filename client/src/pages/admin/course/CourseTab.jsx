@@ -7,13 +7,14 @@ import { Textarea } from '@/components/Textarea'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { useEditCourseMutation, useGetCourseByIdQuery } from '@/features/api/courseApi'
+import { useEditCourseMutation, useGetCourseByIdQuery, usePublishCourseMutation } from '@/features/api/courseApi'
 import { toast } from 'sonner'
 import { useParams } from 'react-router-dom'
+// import { usePublishCourseMutation } from '@/features/api/courseApi'
 
 
 const CourseTab = () => {
-    const isPublished = true; // Dummy variable to check if the course is published or not
+    // const isPublished = true; // Dummy variable to check if the course is published or not
     // const isLoading = false; // Dummy variable to check if the course is loading or not
 
     const [input, setInput] = useState({
@@ -29,7 +30,9 @@ const CourseTab = () => {
     const params=useParams();
     const courseId=params.courseId;
 
-    const {data:courseByIdData,isLoading:courseByIdLoading}=useGetCourseByIdQuery(courseId);
+    const {data:courseByIdData,isLoading:courseByIdLoading,refetch}=useGetCourseByIdQuery(courseId);
+
+    const [publishCourse, {  }] = usePublishCourseMutation();
 
  
 
@@ -92,6 +95,18 @@ const CourseTab = () => {
         await editCourse({formData,courseId});
     }
 
+      const publishStatusHandler = async (action) => {
+    try {
+      const response = await publishCourse({courseId, query:action});
+      if(response.data){
+        refetch();
+        toast.success(response.data.message);
+      }
+    } catch (error) {
+      toast.error("Failed to publish or unpublish course");
+    }
+  }
+
     useEffect(() => {
         if (isSuccess) {
             toast.success(data.message || "Course Updated Successfully");
@@ -114,8 +129,11 @@ const CourseTab = () => {
                     </CardDescription>
                 </div>
                 <div className="flex items-center">
-                    <Button variant="outline" className="mr-2">
-                        {isPublished ? "Unpublish" : "Publish"}
+                    <Button 
+                    onClick={ () => publishStatusHandler(courseByIdData?.course.isPublished? "false" : "true")}
+                    disabled={courseByIdData?.course.lectures.length===0}//agr course me lectures nahi hain to publish button disable kr do
+                    variant="outline" className="mr-2">
+                        {courseByIdData?.course.isPublished? "Unpublish" : "Publish"}
                     </Button>
                     <Button>Remove Course</Button>
                 </div>

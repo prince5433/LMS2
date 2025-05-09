@@ -1,13 +1,16 @@
-import React from 'react'
+import React, { use } from 'react'
 
 import { Skeleton } from "@/components/ui/skeleton"; // Import the Skeleton component for loading states
 
 import Course from "./Course"; // Import the Course component to display course details
+import { useGetPublishedCoursesQuery } from '@/features/api/courseApi';
 
-const courses=[1,2,3,4,5,6];
 
 function Courses() {
-    const isLoading = false
+    const {data,isLoading,isError} = useGetPublishedCoursesQuery();
+    // console.log(data);
+    if(isError) return <h1>Some Error Occured While Fetching Courses</h1>
+    
     return (
         <div className='bg-gray-50'>
             <div className='max-w-7xl mx-auto p-6'>
@@ -18,8 +21,8 @@ function Courses() {
                         isLoading ? Array.from({ length: 8 }).map((_, index) => (
                             <CourseSkeleton key={index} />
                         )) : (
-                           courses.map((course, index) => (
-                                <Course key={index} />
+                           data?.courses && data.courses.map((course, index) => (
+                                <Course key={index} course={course} />
                             ))
                         )
                     }

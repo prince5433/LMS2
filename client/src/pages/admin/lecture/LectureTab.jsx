@@ -7,12 +7,12 @@ import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { Progress } from '@/components/ui/progress'
 import axios from 'axios'
-import { useEditLectureMutation } from '@/features/api/courseApi'
+import { useEditLectureMutation, useGetLectureByIdQuery } from '@/features/api/courseApi'
 import { useParams } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useRemoveLectureMutation } from '@/features/api/courseApi'
 import { Loader2 } from 'lucide-react'
-// import { useGetCourseLectureQuery } from '@/features/api/courseApi'
+
 
 
 const MEDIA_API = "http://localhost:8080/api/v1/media"
@@ -29,6 +29,16 @@ const LectureTab = () => {
     const params = useParams();
     const courseId = params.courseId;
     const lectureId = params.lectureId;
+
+    const{data:lectureData} =useGetLectureByIdQuery(lectureId);
+    const lecture = lectureData?.lecture;
+    useEffect(() => {
+        if (lecture) {
+            setLectureTitle(lecture.lectureTitle);
+            setUploadVideoInfo(lecture.videoInfo);
+            setIsFree(lecture.isPreviewFree);
+        }
+    }, [lecture]);
 
     const [editLecture, { data, isLoading, error, isSuccess }] = useEditLectureMutation();
 

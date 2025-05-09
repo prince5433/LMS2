@@ -42,6 +42,7 @@ import { toast } from "sonner";
 import { useSelector } from "react-redux";
 
 
+
 const Navbar = () => {
   // const user = true;//this is just a dummy variable to check if the user is logged in or not
   // This is a functional component that renders a navigation bar with a logo and title.
@@ -71,7 +72,9 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto hidden md:flex justify-between items-center h-full px-4">
         <div className='flex items-center gap-2'>
           <School size={"30"} />
+          <Link to="/">
           <h1 className='hidden md:block font-extrabold text-2xl'>E-Learning</h1>
+          </Link>
         </div>
 
         {/* user icon and dark mode toggle */}
