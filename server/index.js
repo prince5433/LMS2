@@ -9,7 +9,7 @@ import courseRoute from "./routes/course.route.js";
 import morgan from "morgan";
 import mediaRoute from "./routes/media.route.js";
 import purchaseRoute from "./routes/purchaseCourse.route.js";
-
+import courseProgressRoute from "./routes/courseProgress.route.js";
 
 
 dotenv.config();
@@ -38,6 +38,7 @@ app.use("/api/v1/media",mediaRoute);//media route use hota hai to upload media f
 app.use("/api/v1/user",userRoute);
 app.use("/api/v1/course",courseRoute);
 app.use("/api/v1/purchase",purchaseRoute);//purchase route use hota hai to purchase courses
+app.use("/api/v1/progress",courseProgressRoute);//course progress route use hota hai to track course progress
 
 
 

@@ -4,8 +4,8 @@ const COURSE_PURCHASE_API = 'http://localhost:8080/api/v1/purchase/';
 
 export const purchaseApi = createApi({
     reducerPath: 'purchaseApi',   //reducerPath is used to identify the slice of state in the store
- 
-    
+
+
     tagTypes: ['Refetch Creator Course ', 'Refetch_Lecture'],//tagTypes is used to refetch the data after creating a course 
     //tagTypes is used to invalidate the cache
     baseQuery: fetchBaseQuery({ baseUrl: COURSE_PURCHASE_API, credentials: 'include' }),  //credentials: 'include' is used to send cookies with the request
@@ -21,7 +21,19 @@ export const purchaseApi = createApi({
                 body: { courseId },
             }),
         }),
+        getCourseDetailWithStatus: builder.query({
+            query: (courseId) => ({
+                url: `/course/${courseId}/detail-with-status`,
+                method: 'GET',
+            }),
+        }),
+        getPurchasedCourses: builder.query({
+            query: () => ({
+                url: '/',
+                method: 'GET',
+            }),
+        }),
     }),
 });
 
-export const { useCreateCheckoutSessionMutation, useStripeWebhookMutation } = purchaseApi;
+export const { useCreateCheckoutSessionMutation, useStripeWebhookMutation, useGetCourseDetailWithStatusQuery, useGetPurchasedCoursesQuery } = purchaseApi;

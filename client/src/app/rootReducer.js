@@ -1,16 +1,15 @@
 import { combineReducers } from "@reduxjs/toolkit";
-import authReducer from "../features/authSlice"; // Import the auth reducer
+import authReducer from "../features/authSlice"; 
 import { authApi } from "@/features/api/authApi";
 import { courseApi } from "@/features/api/courseApi";
-import { purchaseApi } from "@/features/api/purchaseApi"; // Import the purchaseApi slice
+import { purchaseApi } from "@/features/api/purchaseApi";
+import { courseProgressApi } from "@/features/api/courseProgressApi";
 
-const rootReducer = combineReducers({
-    [authApi.reducerPath]: authApi.reducer, // Add the authApi reducer to the root reducer
-    auth: authReducer, // Add the auth reducer to the root reducer
-    // Add other reducers here as needed
-    [courseApi.reducerPath]: courseApi.reducer, // Add the courseApi reducer to the root reducer
-    // Add other reducers here as needed
-     [purchaseApi.reducerPath]: purchaseApi.reducer, // Add the purchaseApi reducer to the root reducer
-    auth: authReducer, // Add the auth reducer to the root reducer
+const rootRedcuer = combineReducers({
+    [authApi.reducerPath]:authApi.reducer,
+    [courseApi.reducerPath]:courseApi.reducer,
+    [purchaseApi.reducerPath]:purchaseApi.reducer,
+    [courseProgressApi.reducerPath]:courseProgressApi.reducer,
+    auth:authReducer, 
 });
-export default rootReducer; // Export the combined reducer
+export default rootRedcuer;

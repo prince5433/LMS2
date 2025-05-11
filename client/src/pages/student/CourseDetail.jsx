@@ -5,22 +5,46 @@ import { Separator } from "@/components/ui/separator";
 import { BadgeInfo, PlayCircle } from 'lucide-react'
 import React, { use } from 'react'
 import { useParams } from 'react-router-dom';
+import { useGetCourseDetailWithStatusQuery } from '@/features/api/purchaseApi';
+import { Lock } from 'lucide-react';
+import ReactPlayer from 'react-player';
+import { useNavigate } from 'react-router-dom';
+// import { useGetPurchasedCoursesQuery } from '@/features/api/purchaseApi';
 
 
 const CourseDetail = () => {
     const params = useParams();
     const courseId = params.courseId;
-    const purchasedCourse = false;
+    const navigate = useNavigate();
+    // const purchasedCourse = false;
+
+    const {data,isLoading,isError} = useGetCourseDetailWithStatusQuery(courseId);
+    if(isLoading){
+        return <h1>Loading...</h1>
+    }
+    if(isError){
+        return <h1>Failed to load course Details...</h1>
+    }
+
+    const {course,purchased} = data;
+
+    const handleContinueCourse = () => {
+        // Logic to continue the course
+       if(purchased){
+            navigate(`/course-progress/${courseId}`);
+       }
+    }
+
     return (
         <div className='mt-20 space-y-5'>
             <div className='bg-[#2D2F31] text-white'>
                 <div className='max-w-7xl mx-auto py-8 px-4 md:px-8 flex flex-col gap-2'>
-                    <h1 className='font-bold text-2xl md:text-3xl'>Course Title</h1>
+                    <h1 className='font-bold text-2xl md:text-3xl'>{course?.courseTitle}</h1>
                     <p className='text-base md:text-lg'>Course Subtitle</p>
-                    <p>Created By{" "}<span className='text-[#C0C4FC] underline italic'>Prince Seth</span></p>
+                    <p>Created By{" "}<span className='text-[#C0C4FC] underline italic'>{course?.creator.name}</span></p>
                     <div className='flex items-center gap-2 text-sm'>
                         <BadgeInfo size={16} />
-                        <p>Last updated at 10/05/2025</p>
+                        <p>Last updated {course?.createdAt.split("T")[0]}</p>
                     </div>
                     <p>Students Enrolled : 10</p>
                 </div>
@@ -28,7 +52,7 @@ const CourseDetail = () => {
             <div className='max-w-7xl mx-auto px-4 md:px-8 my-5 flex flex-col lg:flex-row justify-between gap-10'>
                 <div className='w-full lg:w-1/2 space-y-5'>
                     <h1 className='font-bold text-2xl md:text-2xl'>Description</h1>
-                    <p className='text-sm'>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Iure officia, suscipit tenetur incidunt et expedita voluptas possimus porro. Itaque quisquam adipisci assumenda quaerat quia ullam minima illum expedita, inventore quam!</p>
+                    <p className='text-sm' dangerouslySetInnerHTML={{__html:course?.description}}/>
                     <Card>
                         <CardHeader>
                             <CardTitle>Course Content</CardTitle>
@@ -38,14 +62,14 @@ const CourseDetail = () => {
                         </CardHeader>
                         <CardContent className='space-y-2'>
                             {
-                                [1, 2, 3].map((_, idx) => (
+                              course.lectures.map((lecture, idx) => (
                                     <div key={idx} className='flex items-center gap-3 text-sm'>
                                         <span>
                                             {
                                                 true ? (<PlayCircle size={14} />) : (<Lock size={14} />)
                                             }
                                         </span>
-                                        <p>Lecture Title</p>
+                                        <p>{lecture.lectureTitle}</p>
                                     </div>
                                 ))
                             }
@@ -56,7 +80,14 @@ const CourseDetail = () => {
                     <Card>
                         <CardContent className="p-4 flex flex-col">
                             <div className='w-full aspect-video mb-4'>
-                                React Player Video AAYega
+                                <ReactPlayer
+                                    url={course.lectures[7].videoUrl}
+                                    //yaha pe 0 krna hai for intro lectures
+                                    controls={true}
+                                    width='100%'
+                                    height='100%'
+                                    className='rounded-lg'
+                                />
                             </div>
                             <h1>Lecture Title</h1>
                             <Separator className='my-2' />
@@ -64,8 +95,8 @@ const CourseDetail = () => {
                         </CardContent>
                         <CardFooter className='flex justify-center p-4'>
                             {
-                                purchasedCourse ? (
-                                     <Button className='w-full'>Continue Course</Button>
+                                purchased ? (
+                                     <Button onClick={handleContinueCourse} className='w-full'>Continue Course</Button>
                                 ):(
                                     <BuyCourseButton courseId={courseId}/>
                                 )
