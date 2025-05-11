@@ -8,6 +8,7 @@ import userRoute from "./routes/user.route.js";
 import courseRoute from "./routes/course.route.js";
 import morgan from "morgan";
 import mediaRoute from "./routes/media.route.js";
+import purchaseRoute from "./routes/purchaseCourse.route.js";
 
 
 
@@ -36,6 +37,7 @@ app.use(cors({//cors middleware use hota hai to allow cross-origin requests
 app.use("/api/v1/media",mediaRoute);//media route use hota hai to upload media files
 app.use("/api/v1/user",userRoute);
 app.use("/api/v1/course",courseRoute);
+app.use("/api/v1/purchase",purchaseRoute);//purchase route use hota hai to purchase courses
 
 
 
