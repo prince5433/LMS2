@@ -5,7 +5,8 @@ import { Moon, Sun } from 'lucide-react'
 import { useTheme } from './components/ThemeProvider'
 
 const DarkMode = () => {
-  const {setTheme} = useTheme();
+  const {theme, setTheme} = useTheme();
+  
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -15,14 +16,23 @@ const DarkMode = () => {
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
+      <DropdownMenuContent align="end" className="dark:bg-gray-800 dark:border-gray-700">
+        <DropdownMenuItem 
+          onClick={() => setTheme("light")} 
+          className="dark:text-white dark:hover:bg-gray-700"
+        >
           Light
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
+        <DropdownMenuItem 
+          onClick={() => setTheme("dark")} 
+          className="dark:text-white dark:hover:bg-gray-700"
+        >
           Dark
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
+        <DropdownMenuItem 
+          onClick={() => setTheme("system")} 
+          className="dark:text-white dark:hover:bg-gray-700"
+        >
           System
         </DropdownMenuItem>
       </DropdownMenuContent>

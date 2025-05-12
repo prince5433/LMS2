@@ -1,0 +1,117 @@
+/* Global dark mode text fixes */
+.dark {
+  color-scheme: dark;
+}
+
+/* Fix for dropdown menus */
+.dark [data-radix-popper-content-wrapper] {
+  --background-color: #1f2937; /* dark gray-800 */
+  --text-color: #f9fafb; /* white/gray-50 */
+  --border-color: #374151; /* gray-700 */
+  --hover-color: #374151; /* gray-700 */
+}
+
+.dark [data-radix-popper-content-wrapper] * {
+  color: var(--text-color) !important;
+}
+
+.dark [data-radix-dropdown-menu-content],
+.dark [data-slot="dropdown-menu-content"] {
+  background-color: var(--background-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark [data-radix-dropdown-menu-item]:hover,
+.dark [data-slot="dropdown-menu-item"]:hover {
+  background-color: var(--hover-color) !important;
+}
+
+/* Fix for all menu items */
+.dark [data-radix-menu-content] *,
+.dark [data-radix-dropdown-menu-content] * {
+  color: var(--text-color) !important;
+}
+
+/* Fix for all links in dropdown menus */
+.dark [data-radix-dropdown-menu-content] a,
+.dark [data-slot="dropdown-menu-content"] a {
+  color: var(--text-color) !important;
+}
+
+/* Add these specific rules for course cards */
+.dark .course-card {
+  background-color: #1f2937 !important; /* dark gray-800 */
+  border-color: #374151 !important; /* gray-700 */
+}
+
+.dark .course-card * {
+  color: #f9fafb !important; /* white/gray-50 */
+}
+
+.dark .course-card h3,
+.dark .course-card p,
+.dark .course-card span:not(.sr-only) {
+  color: #f9fafb !important; /* white/gray-50 */
+}
+
+.dark .course-card p.text-gray-500,
+.dark .course-card span.text-gray-500 {
+  color: #d1d5db !important; /* gray-300 */
+}
+
+/* Fix for Card components in dark mode */
+.dark [class*="bg-card"] {
+  background-color: #1f2937 !important; /* dark gray-800 */
+  border-color: #374151 !important; /* gray-700 */
+}
+
+.dark [class*="text-card-foreground"] {
+  color: #f9fafb !important; /* white/gray-50 */
+}
+
+/* Fix for all headings and text */
+.dark h1, 
+.dark h2, 
+.dark h3, 
+.dark h4, 
+.dark h5, 
+.dark h6, 
+.dark p, 
+.dark span:not(.sr-only),
+.dark a,
+.dark li,
+.dark label {
+  color: #f9fafb !important; /* white/gray-50 */
+}
+
+/* Fix for all buttons */
+.dark button:not([class*="bg-"]) {
+  color: #f9fafb !important; /* white/gray-50 */
+}
+
+/* Fix for My Account dropdown */
+.dark .dropdown-menu-content,
+.dark [data-radix-dropdown-menu-content] {
+  background-color: #1f2937 !important; /* dark gray-800 */
+  border-color: #374151 !important; /* gray-700 */
+}
+
+.dark .dropdown-menu-label,
+.dark [data-radix-dropdown-menu-label] {
+  color: #f9fafb !important; /* white/gray-50 */
+}
+
+.dark .dropdown-menu-separator,
+.dark [data-radix-dropdown-menu-separator] {
+  background-color: #374151 !important; /* gray-700 */
+}
+
+.dark .dropdown-menu-item,
+.dark [data-radix-dropdown-menu-item] {
+  color: #f9fafb !important; /* white/gray-50 */
+}
+
+.dark .dropdown-menu-item:hover,
+.dark [data-radix-dropdown-menu-item]:hover {
+  background-color: #374151 !important; /* gray-700 */
+}

@@ -81,37 +81,45 @@ const Navbar = () => {
         <div className="flex items-center gap-4">
           {
             user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Avatar>
-                    <AvatarImage src={user?.photoUrl || "https://github.com/shadcn.png"} alt="@shadcn" />
-                    <AvatarFallback>CN</AvatarFallback>
-                  </Avatar>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-56 bg-white shadow-md rounded-md p-2 border border-gray-300"
-                  align="end" // Aligns the dropdown to the right of the trigger
-                  side="bottom" // Positions the dropdown below the trigger
-                  sideOffset={5} // Adds spacing between the trigger and the dropdown
-                  alignOffset={0} // Ensures proper horizontal alignment
-                >
-                  <DropdownMenuLabel className="font-bold text-gray-700">My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator className="my-1 border-t border-gray-300" />
-                  <DropdownMenuGroup>
-                    <DropdownMenuItem className="hover:bg-gray-100 p-2 rounded-md"><Link to="my-learning">My Learning</Link></DropdownMenuItem>
-                    <DropdownMenuItem className="hover:bg-gray-100 p-2 rounded-md"><Link to="profile">Edit Profile</Link></DropdownMenuItem>
-                    <DropdownMenuItem className="hover:bg-gray-100 p-2 rounded-md" onClick={logoutHandler}>LogOut</DropdownMenuItem>
-                  </DropdownMenuGroup>
-                  {
-                    user?.role==="instructor" && (
-                      <>
-                        <DropdownMenuSeparator className="my-1 border-t border-gray-300" />
-                        <DropdownMenuItem className="hover:bg-gray-100 p-2 rounded-md"><Link to="/admin/dashboard">Dashboard</Link></DropdownMenuItem>
-                      </>
-                  )}
-                
-                </DropdownMenuContent>
-              </DropdownMenu>
+             // Only updating the dropdown menu part
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Avatar>
+      <AvatarImage src={user?.photoUrl || "https://github.com/shadcn.png"} alt="@shadcn" />
+      <AvatarFallback>CN</AvatarFallback>
+    </Avatar>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent
+    className="w-56 bg-white dark:bg-gray-800 shadow-md rounded-md p-2 border border-gray-300 dark:border-gray-700"
+    align="end" // Aligns the dropdown to the right of the trigger
+    side="bottom" // Positions the dropdown below the trigger
+    sideOffset={5} // Adds spacing between the trigger and the dropdown
+    alignOffset={0} // Ensures proper horizontal alignment
+  >
+    <DropdownMenuLabel className="font-bold text-gray-700 dark:text-white">My Account</DropdownMenuLabel>
+    <DropdownMenuSeparator className="my-1 border-t border-gray-300 dark:border-gray-700" />
+    <DropdownMenuGroup>
+      <DropdownMenuItem className="hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-md dark:text-white">
+        <Link to="my-learning" className="w-full dark:text-white">My Learning</Link>
+      </DropdownMenuItem>
+      <DropdownMenuItem className="hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-md dark:text-white">
+        <Link to="profile" className="w-full dark:text-white">Edit Profile</Link>
+      </DropdownMenuItem>
+      <DropdownMenuItem className="hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-md dark:text-white" onClick={logoutHandler}>
+        LogOut
+      </DropdownMenuItem>
+    </DropdownMenuGroup>
+    {
+      user?.role==="instructor" && (
+        <>
+          <DropdownMenuSeparator className="my-1 border-t border-gray-300 dark:border-gray-700" />
+          <DropdownMenuItem className="hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-md dark:text-white">
+            <Link to="/admin/dashboard" className="w-full dark:text-white">Dashboard</Link>
+          </DropdownMenuItem>
+        </>
+    )}
+  </DropdownMenuContent>
+</DropdownMenu>
             ) : (
               <div className="flex items-center gap-2">
                 <Button variant="outline" onClick={() => navigate("/login")}>Login</Button>
