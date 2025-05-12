@@ -94,7 +94,7 @@ export const logout = async (_, res) => {
 export const getProfile = async (req, res) => {
     try {
         const userId = req.id; // Extract user ID from the request object
-        const user = await User.findById(userId).select("-password "); // Find the user by ID and exclude sensitive fields
+        const user = await User.findById(userId).select("-password ").populate("enrolledCourses"); // Find the user by ID and exclude sensitive fields
         if (!user) {
             return res.status(404).json({
                 success: false,

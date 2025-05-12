@@ -18,6 +18,29 @@ export const courseApi = createApi({
             invalidatesTags: ['Refetch Creator Course '],
             //invalidatetags is used to refetch the data after creating a course
         }),
+         getSearchCourse:builder.query({
+      query: ({searchQuery, categories, sortByPrice}) => {
+        // Build query string
+        let queryString = `/search?query=${encodeURIComponent(searchQuery)}` // encodeURIComponent is used to encode the query string
+        
+
+        // append cateogry 
+        if(categories && categories.length > 0) {
+          const categoriesString = categories.map(encodeURIComponent).join(",");//
+          queryString += `&categories=${categoriesString}`; // yaha pe categories ko encode kiya gaya hai
+        }
+
+        // Append sortByPrice is available
+        if(sortByPrice){
+          queryString += `&sortByPrice=${encodeURIComponent(sortByPrice)}`; 
+        }
+
+        return {
+          url:queryString,
+          method:"GET", 
+        }
+      }
+    }),
         getPublishedCourses: builder.query({
             query: () => ({
                 url: '/published-courses',
@@ -90,4 +113,4 @@ export const courseApi = createApi({
     }),
 });
 
-export const { useCreateCourseMutation, useGetPublishedCoursesQuery ,useGetCreatorCoursesQuery, useEditCourseMutation, useGetCourseByIdQuery, useCreateLectureMutation, useGetCourseLectureQuery, useEditLectureMutation, useRemoveLectureMutation, useGetLectureByIdQuery, usePublishCourseMutation } = courseApi;
+export const { useCreateCourseMutation,useGetSearchCourseQuery, useGetPublishedCoursesQuery ,useGetCreatorCoursesQuery, useEditCourseMutation, useGetCourseByIdQuery, useCreateLectureMutation, useGetCourseLectureQuery, useEditLectureMutation, useRemoveLectureMutation, useGetLectureByIdQuery, usePublishCourseMutation } = courseApi;

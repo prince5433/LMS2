@@ -103,10 +103,10 @@ const Navbar = () => {
                     <DropdownMenuItem className="hover:bg-gray-100 p-2 rounded-md" onClick={logoutHandler}>LogOut</DropdownMenuItem>
                   </DropdownMenuGroup>
                   {
-                    user.role==="instructor" && (
+                    user?.role==="instructor" && (
                       <>
                         <DropdownMenuSeparator className="my-1 border-t border-gray-300" />
-                        <DropdownMenuItem className="hover:bg-gray-100 p-2 rounded-md">DashBoard</DropdownMenuItem>
+                        <DropdownMenuItem className="hover:bg-gray-100 p-2 rounded-md"><Link to="/admin/dashboard">Dashboard</Link></DropdownMenuItem>
                       </>
                   )}
                 
@@ -119,7 +119,6 @@ const Navbar = () => {
               </div>
             )
           }
-
           <DarkMode />
         </div>
 
@@ -128,7 +127,7 @@ const Navbar = () => {
       {/*Mobile*/}
       <div className='flex md:hidden  justify-between items-center h-full px-4'>
         <h1 className="font-extrabold text-2xl">E-Learning</h1>
-        <MobileNavbar />
+        <MobileNavbar user={user} />
       </div>
     </div>
   )
@@ -137,7 +136,8 @@ const Navbar = () => {
 export default Navbar;
 
 
-const MobileNavbar = () => {
+const MobileNavbar = (user) => {
+  const navigate = useNavigate();
   const role = "instructor"; // This is just a dummy variable to check if the user is an instructor or not
 
   return (
@@ -145,7 +145,7 @@ const MobileNavbar = () => {
       <SheetTrigger asChild>
         <Button
           size="icon"
-          className="rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700"
+          className="rounded-full hover:bg-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700"
           variant="outline"
         >
           <Menu />
@@ -154,7 +154,7 @@ const MobileNavbar = () => {
       <SheetContent className="flex flex-col p-4 space-y-6">
         {/* Header */}
         <SheetHeader className="flex flex-row items-center justify-between">
-          <SheetTitle className="text-lg font-bold">E-Learning</SheetTitle>
+          <SheetTitle className="text-lg font-bold"><Link to ="/">E-Learning</Link></SheetTitle>
           <DarkMode />
         </SheetHeader>
 
@@ -163,10 +163,12 @@ const MobileNavbar = () => {
         {/* Navigation Links */}
         <nav className="flex flex-col space-y-4">
           <span className="text-gray-700 dark:text-gray-300 hover:text-blue-500 cursor-pointer font-bold">
-            My Learning
+            <Link to="/my-learning">My Learning</Link>
+           
           </span>
           <span className="text-gray-700 dark:text-gray-300 hover:text-blue-500 cursor-pointer font-bold">
-            Edit Profile
+            <Link to="/profile">Edit Profile</Link>
+         
           </span>
           <span className="text-gray-700 dark:text-gray-300 hover:text-blue-500 cursor-pointer font-bold">
             Log Out
@@ -174,11 +176,12 @@ const MobileNavbar = () => {
         </nav>
 
         {/* Footer for Instructor */}
-        {role === "instructor" && (
+        {user?.role === "instructor" && (
           <SheetFooter className="mt-auto">
             <SheetClose asChild>
               <Button
                 type="submit"
+                onClick={() => navigate("/admin/dashboard")}
                 className="w-full bg-blue-500 text-white hover:bg-blue-600"
               >
                 Dashboard
