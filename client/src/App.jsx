@@ -1,28 +1,37 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import "./App.css";
-import Login from "./pages/Login";
-import HeroSection from "./pages/student/HeroSection";
-import MainLayout from "./layout/MainLayout";
-import Courses from "./pages/student/Courses";
-import MyLearning from "./pages/student/MyLearning";
-import Profile from "./pages/student/Profile";
-import Sidebar from "./pages/admin/Sidebar";
-import Dashboard from "./pages/admin/Dashboard";
-import CourseTable from "./pages/admin/course/CourseTable";
-import AddCourse from "./pages/admin/course/AddCourse";
-import EditCourse from "./pages/admin/course/EditCourse";
-import CreateLecture from "./pages/admin/lecture/CreateLecture";
-import EditLecture from "./pages/admin/lecture/EditLecture";
-import CourseDetail from "./pages/student/CourseDetail";
-import CourseProgress from "./pages/student/CourseProgress";
-import SearchPage from "./pages/student/SearchPage";
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { Suspense } from 'react'
+import MainLayout from './layout/MainLayout'
+import { ProtectedRoute } from './components/ProtectedRoutes'
+import PurchaseCourseProtectedRoute from './components/PurchaseCourseProtectedRoute'
+import ErrorBoundary from './components/ErrorBoundary'
+import NotFound from './pages/NotFound'
 import {
-  AdminRoute,
-  AuthenticatedUser,
-  ProtectedRoute,
-} from "./components/ProtectedRoutes";
-import PurchaseCourseProtectedRoute from "./components/PurchaseCourseProtectedRoute";
-import { ThemeProvider } from "./components/ThemeProvider";
+  LoginWithLoading,
+  MyLearningWithLoading,
+  CourseDetailWithLoading,
+  CourseProgressWithLoading,
+  AdminDashboardWithLoading,
+  AdminCourseWithLoading,
+  EditCourseWithLoading,
+  CreateLectureWithLoading,
+  EditLectureWithLoading,
+  LectureListWithLoading,
+  PageLoadingSkeleton
+} from './components/LazyWrapper'
+
+// Lazy load remaining components
+import { lazy } from 'react'
+const Home = lazy(() => import('./pages/Home'))
+const Profile = lazy(() => import('./pages/student/Profile'))
+const Sidebar = lazy(() => import('./pages/admin/Sidebar'))
+const CheckUserRole = lazy(() => import('./pages/CheckUserRole'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Settings = lazy(() => import('./pages/Settings'))
+const ProductionChecklist = lazy(() => import('./components/ProductionChecklist'))
+// Import SearchPage normally to avoid dynamic import issues
+import SearchPage from './pages/student/SearchPageSimple'
+// Import AddCourse directly to avoid dynamic import issues
+import AddCourse from './pages/admin/course/AddCourse'
 
 const appRouter = createBrowserRouter([
   {
@@ -30,112 +39,148 @@ const appRouter = createBrowserRouter([
     element: <MainLayout />,
     children: [
       {
-        path: "/",
+        path: "",
         element: (
-          <>
-            <HeroSection />
-            <Courses />
-          </>
-        ),
+          <Suspense fallback={<PageLoadingSkeleton />}>
+            <Home />
+          </Suspense>
+        )
       },
       {
         path: "login",
+        element: <LoginWithLoading />
+      },
+      {
+        path: "dashboard",
         element: (
-          <AuthenticatedUser>
-            <Login />
-          </AuthenticatedUser>
-        ),
+          <Suspense fallback={<PageLoadingSkeleton />}>
+            <Dashboard />
+          </Suspense>
+        )
       },
       {
         path: "my-learning",
         element: (
           <ProtectedRoute>
-            <MyLearning />
+            <MyLearningWithLoading />
           </ProtectedRoute>
-        ),
+        )
       },
       {
         path: "profile",
         element: (
           <ProtectedRoute>
-            <Profile />
+            <Suspense fallback={<PageLoadingSkeleton />}>
+              <Profile />
+            </Suspense>
           </ProtectedRoute>
-        ),
-      },
-      {
-        path: "course/search",
-        element: (
-          <ProtectedRoute>
-            <SearchPage />
-          </ProtectedRoute>
-        ),
+        )
       },
       {
         path: "course-detail/:courseId",
-        element: (
-          <ProtectedRoute>
-            <CourseDetail />
-          </ProtectedRoute>
-        ),
+        element: <CourseDetailWithLoading />
       },
       {
         path: "course-progress/:courseId",
         element: (
           <ProtectedRoute>
             <PurchaseCourseProtectedRoute>
-            <CourseProgress />
+              <CourseProgressWithLoading />
             </PurchaseCourseProtectedRoute>
           </ProtectedRoute>
-        ),
+        )
+      },
+      {
+        path: "course/search",
+        element: <SearchPage />
+      },
+      {
+        path: "check-role",
+        element: (
+          <Suspense fallback={<PageLoadingSkeleton />}>
+            <CheckUserRole />
+          </Suspense>
+        )
       },
 
-      // admin routes start from here
+      //admin routes
       {
         path: "admin",
         element: (
-          <AdminRoute>
-            <Sidebar />
-          </AdminRoute>
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingSkeleton />}>
+              <Sidebar />
+            </Suspense>
+          </ProtectedRoute>
         ),
         children: [
           {
             path: "dashboard",
-            element: <Dashboard />,
-          },
-          {
-            path: "course",
-            element: <CourseTable />,
-          },
-          {
-            path: "course/create",
-            element: <AddCourse />,
-          },
-          {
-            path: "course/:courseId",
-            element: <EditCourse />,
-          },
-          {
-            path: "course/:courseId/lecture",
-            element: <CreateLecture />,
-          },
-          {
-            path: "course/:courseId/lecture/:lectureId",
-            element: <EditLecture />,
-          },
-        ],
+            element: <AdminDashboardWithLoading />
+          },{
+            path:"course",
+            element: <AdminCourseWithLoading />
+          },{
+            path:"course/create",
+            element: (
+              <Suspense fallback={<PageLoadingSkeleton />}>
+                <AddCourse />
+              </Suspense>
+            )
+          },{
+              path:"course/:courseId",
+              element: <EditCourseWithLoading />
+          },{
+            path:"course/:courseId/lecture",
+            element: <LectureListWithLoading />
+          },{
+            path:"course/:courseId/lecture/create",
+            element: <CreateLectureWithLoading />
+          },{
+            path:"course/:courseId/lecture/:lectureId",
+            element: <EditLectureWithLoading />
+          }
+        ]
       },
-    ],
-  },
-]);
+      // Settings route
+      {
+        path: "settings",
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingSkeleton />}>
+              <Settings />
+            </Suspense>
+          </ProtectedRoute>
+        )
+      },
+      // Production checklist (development only)
+      {
+        path: "production-checklist",
+        element: (
+          <Suspense fallback={<PageLoadingSkeleton />}>
+            <ProductionChecklist />
+          </Suspense>
+        )
+      },
+      // 404 catch-all route
+      {
+        path: "*",
+        element: <NotFound />
+      }
+    ]
+  }
+])
+
 
 function App() {
+
   return (
-    <main>
-      <ThemeProvider>
-      <RouterProvider router={appRouter} />
-      </ThemeProvider>
-    </main>
-  );
+    <ErrorBoundary>
+      <main>
+        <RouterProvider router={appRouter} />
+      </main>
+    </ErrorBoundary>
+  )
 }
 
-export default App;
+export default App

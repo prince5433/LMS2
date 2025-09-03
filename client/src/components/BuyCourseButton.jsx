@@ -1,47 +1,66 @@
-import React, { use } from 'react'
-//                                     <Button className='w-full'>Continue Course</Button>
+import React, { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { useCreateCheckoutSessionMutation } from '@/features/api/purchaseApi'
-import { Loader2 } from 'lucide-react';
+import { Loader2, CreditCard, Shield, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
-import { useEffect } from 'react';
 const BuyCourseButton = ({ courseId }) => {
   const [createCheckoutSession, {data, isLoading ,isError,isSuccess,error}] = useCreateCheckoutSessionMutation();
 
   const purchaseCourseHandler = async () => {
-    await createCheckoutSession({ courseId });
+    try {
+      toast.loading("Preparing secure checkout...", { id: "checkout" });
+      await createCheckoutSession({ courseId });
+    } catch (error) {
+      toast.error("Failed to start checkout process", { id: "checkout" });
+    }
   }
 
   useEffect(() => {
     if (isSuccess) {
       if(data?.url){
-        window.location.href = data.url;//redirect to stripe checkout url
+        toast.success("Redirecting to secure payment...", { id: "checkout" });
+        // Small delay to show success message before redirect
+        setTimeout(() => {
+          window.location.href = data.url; // redirect to stripe checkout url
+        }, 1000);
       } else{
-         toast.error("Invalid response from server.")
+        toast.error("Invalid response from server. Please try again.", { id: "checkout" });
       }
     }
     if(isError){
-      toast.error(error?.data?.message || "Failed to create checkout session.");
+      const errorMessage = error?.data?.message || "Failed to create checkout session. Please try again.";
+      toast.error(errorMessage, { id: "checkout" });
+      console.error("Checkout error:", error);
     }
-  }, [isSuccess, data, isError,error]);
+  }, [isSuccess, data, isError, error]);
 
   return (
-
-    <Button disabled={isLoading} className='w-full' onClick={purchaseCourseHandler}>
-      {
-        isLoading ? (
+    <div className="space-y-3">
+      <Button
+        disabled={isLoading}
+        className='w-full h-12 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl'
+        onClick={purchaseCourseHandler}
+      >
+        {isLoading ? (
           <>
-            <Loader2 className="animate-spin mr-2 h-4 w-4" />
-            Please Wait
+            <Loader2 className="animate-spin mr-2 h-5 w-5" />
+            Preparing Checkout...
           </>
         ) : (
           <>
-            <span className='text-sm'>Purchase Course</span>
+            <CreditCard className="mr-2 h-5 w-5" />
+            Purchase Course
+            <ArrowRight className="ml-2 h-5 w-5" />
           </>
-        )
-      }
-    </Button>
+        )}
+      </Button>
 
+      {/* Security Badge */}
+      <div className="flex items-center justify-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+        <Shield className="h-3 w-3" />
+        <span>Secure payment powered by Stripe</span>
+      </div>
+    </div>
   )
 }
 

@@ -1,19 +1,16 @@
 import express from 'express';
-import { createCourse, getCreatorCourses,editCourse, getCourseById,createLecture,getCourseLecture, editLecture, removeLecture, getLectureById, togglePublishCourse, getPublishedCourses, searchCourse } from '../controllers/course.controller.js';
+import { createCourse, getCreatorCourses, editCourse, getCourseById, createLecture, getCourseLecture, getPublishedCourses, searchCourses, getPublishedCourseById } from '../controllers/course.controller.js';
 import isAuthenticated from '../middlewares/isAuthenticated.js';
 import upload from "../utils/multer.js";
 
 const router = express.Router();
-router.route("/").post(isAuthenticated,createCourse);
-router.route("/search").get(isAuthenticated,searchCourse);
-router.route("/published-courses").get(getPublishedCourses);
-router.route("/").get(isAuthenticated,getCreatorCourses);
-router.route("/:courseId").put(isAuthenticated,upload.single("courseThumbnail"),editCourse);
-router.route("/:courseId").get(isAuthenticated,getCourseById);
-router.route("/:courseId/lecture").post(isAuthenticated,createLecture);
-router.route("/:courseId/lecture").get(isAuthenticated,getCourseLecture);
-router.route("/:courseId/lecture/:lectureId").post(isAuthenticated, editLecture);
-router.route("/lecture/:lectureId").delete(isAuthenticated, removeLecture);
-router.route("/lecture/:lectureId").get(isAuthenticated,getLectureById);
-router.route("/:courseId").patch(isAuthenticated,togglePublishCourse);//patch is used when minimal data is changed
+router.route("/").post(isAuthenticated, createCourse);
+router.route("/").get(isAuthenticated, getCreatorCourses);
+router.route("/published-courses").get(getPublishedCourses); // Public route - no authentication needed
+router.route("/search").get(searchCourses); // Public search route - no authentication needed
+router.route("/public/:courseId").get(getPublishedCourseById); // Public course details - no authentication needed
+router.route("/:courseId").put(isAuthenticated, upload.single("courseThumbnail"), editCourse);
+router.route("/:courseId").get(isAuthenticated, getCourseById);
+router.route("/:courseId/lecture").post(isAuthenticated, createLecture);
+router.route("/:courseId/lecture").get(isAuthenticated, getCourseLecture);
 export default router;

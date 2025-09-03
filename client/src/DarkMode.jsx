@@ -2,10 +2,26 @@ import React from 'react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './components/ui/dropdown-menu'
 import { Button } from './components/ui/button'
 import { Moon, Sun } from 'lucide-react'
-import { useTheme } from './components/ThemeProvider'
 
 const DarkMode = () => {
-  const {theme, setTheme} = useTheme();
+  const [theme, setTheme] = React.useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('theme') || 'system'
+    }
+    return 'system'
+  });
+
+  React.useEffect(() => {
+    const root = window.document.documentElement;
+
+    if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+
+    localStorage.setItem('theme', theme);
+  }, [theme]);
   
   return (
     <DropdownMenu>

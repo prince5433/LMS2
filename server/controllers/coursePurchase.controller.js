@@ -14,15 +14,7 @@ export const createCheckoutSession = async (req, res) => {
     const course = await Course.findById(courseId);
     if (!course) return res.status(404).json({ message: "Course not found!" });
 
-    // Create a new course purchase record
-    const newPurchase = new CoursePurchase({
-      courseId,
-      userId,
-      amount: course.coursePrice,
-      status: "pending",
-    });
-
-    // Create a Stripe checkout session
+    // Create Stripe session first to get the session ID
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
@@ -31,24 +23,32 @@ export const createCheckoutSession = async (req, res) => {
             currency: "inr",
             product_data: {
               name: course.courseTitle,
-              images: [course.courseThumbnail],
+              images: course.courseThumbnail ? [course.courseThumbnail] : [],
             },
-            unit_amount: course.coursePrice * 100, // Amount in paise (lowest denomination)
+            unit_amount: Math.round(course.coursePrice * 100), // Amount in paise (lowest denomination)
           },
           quantity: 1,
         },
       ],
       mode: "payment",
-      success_url: `http://localhost:5173/course-progress/${courseId}`, // once payment successful redirect to course progress page
-      cancel_url: `http://localhost:5173/course-detail/${courseId}`,
+      success_url: `${process.env.FRONTEND_URL}/course-progress/${courseId}`, // once payment successful redirect to course progress page
+      cancel_url: `${process.env.FRONTEND_URL}/course-detail/${courseId}`,
       metadata: {
-        courseId: courseId,
-        userId: userId,
-      },
-      shipping_address_collection: {
-        allowed_countries: ["IN"], // Optionally restrict allowed countries
+        courseId: courseId.toString(),
+        userId: userId.toString(),
       },
     });
+
+    // Create a new course purchase record with the session ID
+    const newPurchase = new CoursePurchase({
+      courseId,
+      userId,
+      amount: course.coursePrice,
+      status: "pending",
+      paymentId: session.id, // Store the session ID
+    });
+
+
 
     if (!session.url) {
       return res
@@ -65,7 +65,12 @@ export const createCheckoutSession = async (req, res) => {
       url: session.url, // Return the Stripe checkout URL
     });
   } catch (error) {
-    console.log(error);
+    console.error("Error creating checkout session:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create checkout session. Please try again.",
+      error: error.message
+    });
   }
 };
 

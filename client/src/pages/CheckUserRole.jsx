@@ -22,37 +22,38 @@ const CheckUserRole = () => {
             </span></p>
           </div>
           
-          {user.role !== 'instructor' && (
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-md mb-4">
-              <h3 className="text-lg font-medium text-yellow-800 dark:text-yellow-200 mb-2">Dashboard Not Visible?</h3>
-              <p className="text-yellow-700 dark:text-yellow-300 mb-2">
-                You need to have the "instructor" role to see the Dashboard option.
-                Your current role is set to "{user.role}".
-              </p>
-              <p className="text-yellow-700 dark:text-yellow-300">
-                To update your role, you'll need to modify it in the database or ask an administrator to update it for you.
-              </p>
-            </div>
-          )}
-          
-          {user.role === 'instructor' && (
-            <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-md mb-4">
-              <h3 className="text-lg font-medium text-green-800 dark:text-green-200 mb-2">Dashboard Access Available</h3>
-              <p className="text-green-700 dark:text-green-300 mb-2">
-                You have the "instructor" role, so you should be able to see the Dashboard option in the dropdown menu.
-              </p>
-              <p className="text-green-700 dark:text-green-300">
-                If you still can't see it, try refreshing the page or check if there are any other issues.
-              </p>
-              <div className="mt-4">
-                <Link to="/admin/dashboard">
-                  <Button className="bg-green-600 hover:bg-green-700 text-white">
-                    Go to Dashboard
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-md mb-4">
+            <h3 className="text-lg font-medium text-blue-800 dark:text-blue-200 mb-2">
+              {user.role === 'instructor' ? 'Instructor Dashboard' : 'Student Dashboard'}
+            </h3>
+            <p className="text-blue-700 dark:text-blue-300 mb-2">
+              {user.role === 'instructor'
+                ? 'As an instructor, you can create courses, manage students, and track your revenue.'
+                : 'As a student, you can browse courses, track your progress, and manage your learning.'
+              }
+            </p>
+            <div className="mt-4 flex gap-3">
+              <Link to="/dashboard">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                  Go to Dashboard
+                </Button>
+              </Link>
+              {user.role === 'instructor' && (
+                <Link to="/admin/course">
+                  <Button variant="outline">
+                    Manage Courses
                   </Button>
                 </Link>
-              </div>
+              )}
+              {user.role === 'student' && (
+                <Link to="/my-learning">
+                  <Button variant="outline">
+                    My Learning
+                  </Button>
+                </Link>
+              )}
             </div>
-          )}
+          </div>
         </div>
       ) : (
         <div className="bg-red-50 dark:bg-red-900/20 p-6 rounded-lg shadow-md">

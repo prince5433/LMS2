@@ -43,20 +43,58 @@ const CourseProgress = () => {
 
   const [currentLecture, setCurrentLecture] = useState(null);
 
-  if (isLoading) return <p>Loading...</p>;
-  if (isError) return <p>Failed to load course details</p>;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading course progress...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <CheckCircle size={48} className="mx-auto" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Failed to Load Course</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">Unable to load course progress details</p>
+          <Button onClick={() => window.location.reload()} variant="outline">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   console.log(data);
 
-  const { courseDetails, progress, completed } = data.data;
-  const { courseTitle } = courseDetails;
+  // Add safety checks for data structure
+  if (!data || !data.data) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 dark:text-gray-400">No course data available</p>
+        </div>
+      </div>
+    );
+  }
+
+  const { courseDetails, progress = [], completed } = data.data;
+  const courseTitle = courseDetails?.courseTitle || "Course";
 
   // initialze the first lecture is not exist
   const initialLecture =
-    currentLecture || (courseDetails.lectures && courseDetails.lectures[0]);
+    currentLecture || (courseDetails?.lectures && courseDetails.lectures[0]);
 
   const isLectureCompleted = (lectureId) => {
-    return progress.some((prog) => prog.lectureId === lectureId && prog.viewed);
+    return progress && Array.isArray(progress)
+      ? progress.some((prog) => prog.lectureId === lectureId && prog.viewed)
+      : false;
   };
 
   const handleLectureProgress = async (lectureId) => {
@@ -100,26 +138,38 @@ const CourseProgress = () => {
         {/* Video section  */}
         <div className="flex-1 md:w-3/5 h-fit rounded-lg shadow-lg p-4">
           <div>
-            <video
-              src={currentLecture?.videoUrl || initialLecture.videoUrl}
-              controls
-              className="w-full h-auto md:rounded-lg"
-              onPlay={() =>
-                handleLectureProgress(currentLecture?._id || initialLecture._id)
-              }
-            />
+            {(currentLecture?.videoUrl || initialLecture?.videoUrl) ? (
+              <video
+                src={currentLecture?.videoUrl || initialLecture?.videoUrl}
+                controls
+                className="w-full h-auto md:rounded-lg"
+                onPlay={() =>
+                  handleLectureProgress(currentLecture?._id || initialLecture?._id)
+                }
+              />
+            ) : (
+              <div className="w-full h-64 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                <div className="text-center">
+                  <CirclePlay size={48} className="text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-500 dark:text-gray-400">No video available</p>
+                </div>
+              </div>
+            )}
           </div>
           {/* Display current watching lecture title */}
           <div className="mt-2 ">
             <h3 className="font-medium text-lg">
-              {`Lecture ${
-                courseDetails.lectures.findIndex(
-                  (lec) =>
-                    lec._id === (currentLecture?._id || initialLecture._id)
-                ) + 1
-              } : ${
-                currentLecture?.lectureTitle || initialLecture.lectureTitle
-              }`}
+              {courseDetails?.lectures && (currentLecture || initialLecture) ?
+                `Lecture ${
+                  courseDetails.lectures.findIndex(
+                    (lec) =>
+                      lec._id === (currentLecture?._id || initialLecture?._id)
+                  ) + 1
+                } : ${
+                  currentLecture?.lectureTitle || initialLecture?.lectureTitle
+                }` :
+                "No lecture selected"
+              }
             </h3>
           </div>
         </div>
@@ -127,7 +177,8 @@ const CourseProgress = () => {
         <div className="flex flex-col w-full md:w-2/5 border-t md:border-t-0 md:border-l border-gray-200 md:pl-4 pt-4 md:pt-0">
           <h2 className="font-semibold text-xl mb-4">Course Lecture</h2>
           <div className="flex-1 overflow-y-auto">
-            {courseDetails?.lectures.map((lecture) => (
+            {courseDetails?.lectures && courseDetails.lectures.length > 0 ? (
+              courseDetails.lectures.map((lecture) => (
               <Card
                 key={lecture._id}
                 className={`mb-3 hover:cursor-pointer transition transform ${
@@ -160,7 +211,13 @@ const CourseProgress = () => {
                   )}
                 </CardContent>
               </Card>
-            ))}
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <CirclePlay size={48} className="text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-500 dark:text-gray-400">No lectures available</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

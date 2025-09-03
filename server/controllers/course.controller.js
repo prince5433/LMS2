@@ -1,8 +1,6 @@
 import { Course } from "../models/course.model.js";
 import { deleteMediaFromCloudinary, uploadMedia } from "../utils/cloudinary.js";
 import { Lecture } from "../models/lecture.model.js";
-import { deleteVideoFromCloudinary } from "../utils/cloudinary.js";
-// import { deleteMedia } from "../utils/cloudinary.js";
 
 export const createCourse = async (req, res) => {
     try {
@@ -29,76 +27,6 @@ export const createCourse = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Failed to create course"
-        })
-    }
-}
-export const searchCourse = async (req,res) => {
-    try {
-        const {query = "", categories = [], sortByPrice =""} = req.query;
-        console.log(categories);
-        
-        // create search query
-        const searchCriteria = {
-            isPublished:true,
-            $or:[
-                {courseTitle: {$regex:query, $options:"i"}},
-                //regex is used to search for a pattern in a string
-                //options i is used to make the search case insensitive
-                // $or is used to search for multiple fields
-                {subTitle: {$regex:query, $options:"i"}},
-                {category: {$regex:query, $options:"i"}},
-            ]
-        }
-
-        // if categories selected
-        if(categories.length > 0) {
-            searchCriteria.category = {$in: categories};
-        }
-
-        // define sorting order
-        const sortOptions = {};
-        if(sortByPrice === "low"){
-            sortOptions.coursePrice = 1;//sort by price in ascending
-        }else if(sortByPrice === "high"){
-            sortOptions.coursePrice = -1; // descending
-        }
-
-        let courses = await Course.find(searchCriteria).populate({path:"creator", select:"name photoUrl"}).sort(sortOptions);
-
-        return res.status(200).json({
-            success:true,
-            courses: courses || []
-        });
-
-    } catch (error) {
-        console.log(error);
-        
-    }
-}
-
-export const getPublishedCourses = async (_, res) => {
-    try {
-        const courses = await Course.find({ isPublished: true }).populate({
-            path: "creator",
-            select: "name photoUrl",
-        });// Find all published courses
-        if (!courses ) {
-            return res.status(404).json({
-                success: false,
-                message: "No courses found",
-                // courses: []
-            });
-        }
-        return res.status(200).json({
-            success: true,
-            message: "Courses fetched successfully",
-            courses
-        });
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to get published courses"
         })
     }
 }
@@ -246,11 +174,11 @@ export const createLecture = async (req, res) => {
     }
   };
 
-  export const getCourseLecture =async (req,res)=>{
+export const getCourseLecture = async (req, res) => {
     try {
-        const {courseId} = req.params;
+        const { courseId } = req.params;
         const course = await Course.findById(courseId).populate("lectures");
-        //polulate ka kam 
+        //polulate ka kam
         if (!course) {
             return res.status(404).json({
                 success: false,
@@ -271,142 +199,120 @@ export const createLecture = async (req, res) => {
     }
 }
 
-export const editLecture = async (req, res) => {
+// Get all published courses (for public viewing)
+export const getPublishedCourses = async (req, res) => {
     try {
-        const { lectureTitle, isPreviewFree ,videoInfo} = req.body;
-        const { lectureId,courseId } = req.params;
-        const lecture =await Lecture.findById(lectureId);
-        if (!lecture) {
-            return res.status(404).json({
-                success: false,
-                message: "Lecture not found."
+        const courses = await Course.find({ isPublished: true }).populate({
+            path: "creator",
+            select: "name photoUrl"
+        });
+
+        if (!courses || courses.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: "No published courses found",
+                courses: []
             });
         }
 
-        //update lecture
-        if(lectureTitle) {
-            lecture.lectureTitle = lectureTitle;
-        }
-        if(videoInfo?.videoUrl) {
-            lecture.videoUrl = videoInfo.videoUrl;
-        }
-        if(videoInfo?.publicId) {
-            lecture.publicId = videoInfo.publicId;
-        }
-            lecture.isPreviewFree = isPreviewFree;
-        
-
-        await lecture.save(); // Save the updated lecture to the database
-
-        //ensure the course still has the lectureid if it was not already added;
-        const course = await Course.findById(courseId);
-        if(course && !course.lectures.includes(lectureId)) {
-            course.lectures.push(lectureId);
-            await course.save();
-        };
         return res.status(200).json({
             success: true,
-            message: "Lecture updated successfully.",
-            lecture
-        });
-
-       
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to update lecture."
-        });
-    }
-};
-
-export const removeLecture = async (req, res) => {
-    try {
-        const { lectureId } = req.params;
-        const lecture = await Lecture.findByIdAndDelete(lectureId);//de;ete ke bad return bhi krta hai
-        if (!lecture) {
-            return res.status(404).json({
-                success: false,
-                message: "Lecture not found."
-            });
-        }
-        //delete the lecture from cloudinary as well
-        if(lecture.publicId){
-            await deleteVideoFromCloudinary(lecture.publicId);
-        }
-
-        //Remove the lecture reference from the associated course
-        await Course.updateOne(
-            { lectures: lectureId },//find the course that contains the lecture
-            { $pull: { lectures: lectureId } }//remove the lecture from the course
-            //pull operator is used to remove the first matching value from an array
-        );
-        return res.status(200).json({
-            success: true,
-            message: "Lecture removed successfully."
+            courses
         });
     } catch (error) {
         console.log(error);
         return res.status(500).json({
             success: false,
-            message: "Failed to remove lecture."
-        });
-    }
-};
-
-export const getLectureById = async (req, res) => {
-    try {
-        const { lectureId } = req.params;
-        const lecture = await Lecture.findById(lectureId);
-        if (!lecture) {
-            return res.status(404).json({
-                success: false,
-                message: "Lecture not found."
-            });
-        }
-        return res.status(200).json({
-            success: true,
-            message: "Lecture fetched successfully.",
-            lecture
-        });
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({
-            success: false,
-            message: "Failed to get lecture by id."
+            message: "Failed to get published courses"
         });
     }
 }
 
-//publish unpublish course logic
-export const togglePublishCourse = async (req,res) => {
+// Search courses with filters
+export const searchCourses = async (req, res) => {
     try {
-        const {courseId} = req.params;
-        const {publish} = req.query; // true, false
-        const course = await Course.findById(courseId);
-        if(!course){
-            return res.status(404).json({
-                message:"Course not found!"
-            });
-        }
-        // publish status based on the query paramter
-        course.isPublished = publish === "true";
-        await course.save();
+        const { query, categories, sortByPrice } = req.query;
 
-        const statusMessage = course.isPublished ? "Published" : "Unpublished";
+        // Build search criteria
+        let searchCriteria = { isPublished: true };
+
+        // Add text search if query provided
+        if (query) {
+            searchCriteria.$or = [
+                { courseTitle: { $regex: query, $options: 'i' } },
+                { subTitle: { $regex: query, $options: 'i' } },
+                { description: { $regex: query, $options: 'i' } },
+                { category: { $regex: query, $options: 'i' } }
+            ];
+        }
+
+        // Add category filter if provided
+        if (categories) {
+            const categoryArray = categories.split(',');
+            searchCriteria.category = { $in: categoryArray };
+        }
+
+        // Build the query
+        let coursesQuery = Course.find(searchCriteria).populate({
+            path: "creator",
+            select: "name photoUrl"
+        });
+
+        // Add sorting if provided
+        if (sortByPrice) {
+            if (sortByPrice === 'low') {
+                coursesQuery = coursesQuery.sort({ coursePrice: 1 });
+            } else if (sortByPrice === 'high') {
+                coursesQuery = coursesQuery.sort({ coursePrice: -1 });
+            }
+        } else {
+            // Default sort by creation date (newest first)
+            coursesQuery = coursesQuery.sort({ createdAt: -1 });
+        }
+
+        const courses = await coursesQuery;
+
         return res.status(200).json({
-            message:`Course is ${statusMessage}`
+            success: true,
+            courses
         });
     } catch (error) {
         console.log(error);
         return res.status(500).json({
-            message:"Failed to update status"
-        })
+            success: false,
+            message: "Failed to search courses"
+        });
     }
 }
 
+// Get course details for public viewing (no authentication required)
+export const getPublishedCourseById = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const course = await Course.findOne({
+            _id: courseId,
+            isPublished: true
+        }).populate({
+            path: "creator",
+            select: "name photoUrl"
+        }).populate("lectures");
 
+        if (!course) {
+            return res.status(404).json({
+                success: false,
+                message: "Course not found or not published"
+            });
+        }
 
-
-
-
+        return res.status(200).json({
+            success: true,
+            course
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to get course details"
+        });
+    }
+}
