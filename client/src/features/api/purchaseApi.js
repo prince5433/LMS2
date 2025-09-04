@@ -41,6 +41,26 @@ export const purchaseApi = createApi({
             }),
             providesTags: ['InstructorStats'],
         }),
+        completePurchaseManually: builder.mutation({
+            query: ({ courseId }) => ({
+                url: '/complete-manually',
+                method: 'POST',
+                body: { courseId },
+            }),
+            invalidatesTags: ['PurchasedCourses', 'InstructorStats'],
+        }),
+        debugPurchaseStatus: builder.query({
+            query: (courseId) => ({
+                url: `/debug/${courseId}`,
+                method: 'GET',
+            }),
+        }),
+        debugPurchaseStatus: builder.query({
+            query: (courseId) => ({
+                url: `/debug/${courseId}`,
+                method: 'GET',
+            }),
+        }),
     }),
 });
 
@@ -49,5 +69,7 @@ export const {
     useStripeWebhookMutation,
     useGetCourseDetailWithStatusQuery,
     useGetPurchasedCoursesQuery,
-    useGetInstructorStatsQuery
+    useGetInstructorStatsQuery,
+    useCompletePurchaseManuallyMutation,
+    useDebugPurchaseStatusQuery
 } = purchaseApi;

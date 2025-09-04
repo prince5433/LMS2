@@ -67,7 +67,7 @@ const AddCourse = () => {
     try {
       // Send all form data to the API
       const courseData = {
-        courseTitle: formData.courseTitle.trim(),
+        courseTitle: (formData.courseTitle || "").trim(),
         category: formData.category,
         subTitle: (formData.subTitle || "").trim(),
         description: (formData.description || "").trim(),
@@ -75,7 +75,7 @@ const AddCourse = () => {
         coursePrice: formData.coursePrice ? Number(formData.coursePrice) : 0
       };
 
-      console.log("Creating course with data:", courseData);
+
 
       await createCourse(courseData);
     } catch (err) {

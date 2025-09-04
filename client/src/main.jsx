@@ -8,7 +8,6 @@ import { appStore } from './app/store.js';
 import { Toaster } from 'sonner';
 import { useLoadUserQuery } from './features/api/authApi';
 import { LoadingSpinner } from './components/LazyWrapper';
-import './utils/quickTest.js'; // Load quick test utilities for debugging
 
 class ErrorBoundary extends React.Component {
   constructor(props) {

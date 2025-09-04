@@ -161,26 +161,40 @@ export const stripeWebhook = async (req, res) => {
 
   // Handle the checkout session completed event
   if (event.type === "checkout.session.completed") {
-    console.log("check session complete is called");
+    console.log("Checkout session completed webhook called");
 
     try {
       const session = event.data.object;
+      console.log("Session data:", { id: session.id, amount_total: session.amount_total });
 
       const purchase = await CoursePurchase.findOne({
         paymentId: session.id,
       }).populate({ path: "courseId" });
 
+      console.log("Found purchase:", purchase ? {
+        id: purchase._id,
+        userId: purchase.userId,
+        courseId: purchase.courseId?._id,
+        status: purchase.status,
+        amount: purchase.amount
+      } : "No purchase found");
+
       if (!purchase) {
+        console.error("Purchase not found for session:", session.id);
         return res.status(404).json({ message: "Purchase not found" });
       }
 
+      // Update purchase details
       if (session.amount_total) {
         purchase.amount = session.amount_total / 100;
       }
       purchase.status = "completed";
 
+      console.log("Updating purchase status to completed");
+
       // Make all lectures visible by setting `isPreviewFree` to true
-      if (purchase.courseId && purchase.courseId.lectures.length > 0) {
+      if (purchase.courseId && purchase.courseId.lectures && purchase.courseId.lectures.length > 0) {
+        console.log("Making lectures visible for course:", purchase.courseId._id);
         await Lecture.updateMany(
           { _id: { $in: purchase.courseId.lectures } },
           { $set: { isPreviewFree: true } }
@@ -188,22 +202,29 @@ export const stripeWebhook = async (req, res) => {
       }
 
       await purchase.save();
+      console.log("Purchase saved successfully");
 
       // Update user's enrolledCourses
-      await User.findByIdAndUpdate(
+      console.log("Adding course to user's enrolled courses");
+      const updatedUser = await User.findByIdAndUpdate(
         purchase.userId,
         { $addToSet: { enrolledCourses: purchase.courseId._id } }, // Add course ID to enrolledCourses
         { new: true }
       );
+      console.log("User updated, enrolled courses count:", updatedUser?.enrolledCourses?.length);
 
       // Update course to add user ID to enrolledStudents
-      await Course.findByIdAndUpdate(
+      console.log("Adding user to course's enrolled students");
+      const updatedCourse = await Course.findByIdAndUpdate(
         purchase.courseId._id,
         { $addToSet: { enrolledStudents: purchase.userId } }, // Add user ID to enrolledStudents
         { new: true }
       );
+      console.log("Course updated, enrolled students count:", updatedCourse?.enrolledStudents?.length);
+
+      console.log("Webhook processing completed successfully");
     } catch (error) {
-      console.error("Error handling event:", error);
+      console.error("Error handling webhook event:", error);
       return res.status(500).json({ message: "Internal Server Error" });
     }
   }
@@ -356,6 +377,8 @@ export const completePurchaseManually = async (req, res) => {
     const { courseId } = req.body;
     const userId = req.id;
 
+    console.log("Manual purchase completion called:", { userId, courseId });
+
     if (!courseId) {
       return res.status(400).json({
         success: false,
@@ -372,6 +395,27 @@ export const completePurchaseManually = async (req, res) => {
       });
     }
 
+    console.log("Course found:", {
+      id: course._id,
+      title: course.courseTitle,
+      price: course.coursePrice
+    });
+
+    // Check if purchase already exists
+    const existingPurchase = await CoursePurchase.findOne({
+      userId,
+      courseId,
+      status: "completed"
+    });
+
+    if (existingPurchase) {
+      console.log("Purchase already exists:", existingPurchase._id);
+      return res.status(400).json({
+        success: false,
+        message: "Course already purchased"
+      });
+    }
+
     // Create a purchase record
     const purchase = new CoursePurchase({
       courseId,
@@ -382,40 +426,119 @@ export const completePurchaseManually = async (req, res) => {
     });
 
     await purchase.save();
+    console.log("Purchase record created:", purchase._id);
 
     // Update user's enrolledCourses
-    await User.findByIdAndUpdate(
+    const updatedUser = await User.findByIdAndUpdate(
       userId,
       { $addToSet: { enrolledCourses: courseId } },
       { new: true }
     );
+    console.log("User updated, enrolled courses count:", updatedUser?.enrolledCourses?.length);
 
     // Update course to add user ID to enrolledStudents
-    await Course.findByIdAndUpdate(
+    const updatedCourse = await Course.findByIdAndUpdate(
       courseId,
       { $addToSet: { enrolledStudents: userId } },
       { new: true }
     );
+    console.log("Course updated, enrolled students count:", updatedCourse?.enrolledStudents?.length);
 
     // Make all lectures visible
     if (course.lectures && course.lectures.length > 0) {
+      console.log("Making lectures visible, count:", course.lectures.length);
       await Lecture.updateMany(
         { _id: { $in: course.lectures } },
         { $set: { isPreviewFree: true } }
       );
     }
 
+    console.log("Manual purchase completion successful");
+
     return res.status(200).json({
       success: true,
       message: "Purchase completed successfully",
-      purchase
+      purchase: {
+        id: purchase._id,
+        courseId: purchase.courseId,
+        userId: purchase.userId,
+        amount: purchase.amount,
+        status: purchase.status
+      }
     });
 
   } catch (error) {
     console.error("Manual purchase completion error:", error);
     return res.status(500).json({
       success: false,
-      message: "Failed to complete purchase"
+      message: "Failed to complete purchase",
+      error: error.message
+    });
+  }
+};
+
+// Debug endpoint to check purchase and enrollment status
+export const debugPurchaseStatus = async (req, res) => {
+  try {
+    const userId = req.id;
+    const { courseId } = req.params;
+
+    // Get user with enrolled courses
+    const user = await User.findById(userId).populate('enrolledCourses');
+
+    // Get all purchases for this user
+    const allPurchases = await CoursePurchase.find({ userId }).populate('courseId');
+
+    // Get specific purchase for this course
+    const specificPurchase = await CoursePurchase.findOne({
+      userId,
+      courseId
+    }).populate('courseId');
+
+    // Get course with enrolled students
+    const course = await Course.findById(courseId).populate('enrolledStudents');
+
+    return res.status(200).json({
+      success: true,
+      debug: {
+        userId,
+        courseId,
+        user: {
+          id: user?._id,
+          name: user?.name,
+          enrolledCoursesCount: user?.enrolledCourses?.length || 0,
+          enrolledCourses: user?.enrolledCourses?.map(c => ({
+            id: c._id,
+            title: c.courseTitle
+          })) || []
+        },
+        allPurchases: allPurchases.map(p => ({
+          id: p._id,
+          courseId: p.courseId?._id,
+          courseTitle: p.courseId?.courseTitle,
+          status: p.status,
+          amount: p.amount
+        })),
+        specificPurchase: specificPurchase ? {
+          id: specificPurchase._id,
+          status: specificPurchase.status,
+          amount: specificPurchase.amount
+        } : null,
+        course: course ? {
+          id: course._id,
+          title: course.courseTitle,
+          enrolledStudentsCount: course.enrolledStudents?.length || 0,
+          isUserEnrolled: course.enrolledStudents?.some(s => s._id.toString() === userId)
+        } : null
+      }
+    });
+
+  } catch (error) {
+    console.error("Debug purchase status error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to get debug info",
+      error: error.message
     });
   }
 };

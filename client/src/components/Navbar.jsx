@@ -52,6 +52,8 @@ const Navbar = () => {
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const [searchSuggestions, setSearchSuggestions] = useState([]);
 
+
+
   const [logOutUser, { data, isSuccess }] = useLogoutUserMutation();
   const navigate = useNavigate();
 
@@ -140,9 +142,12 @@ const Navbar = () => {
               Dashboard
             </Link>
           )}
-          <Link to="/my-learning" className="text-sm font-medium hover:text-primary transition-colors">
-            My Learning
-          </Link>
+          {/* Only show My Learning for students */}
+          {user && user.role === "student" && (
+            <Link to="/my-learning" className="text-sm font-medium hover:text-primary transition-colors">
+              My Learning
+            </Link>
+          )}
         </nav>
 
         {/* Search Bar with Suggestions */}
@@ -213,10 +218,15 @@ const Navbar = () => {
                       <User size={16} />
                       <Link to="/profile" className="flex-1">Profile</Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2 p-2 cursor-pointer">
-                      <BookOpen size={16} />
-                      <Link to="/my-learning" className="flex-1">My Learning</Link>
-                    </DropdownMenuItem>
+
+                    {/* Student-specific options - Only show for students */}
+                    {user && user.role === "student" && (
+                      <DropdownMenuItem className="flex items-center gap-2 p-2 cursor-pointer">
+                        <BookOpen size={16} />
+                        <Link to="/my-learning" className="flex-1">My Learning</Link>
+                      </DropdownMenuItem>
+                    )}
+
                     <DropdownMenuItem className="flex items-center gap-2 p-2 cursor-pointer">
                       <Settings size={16} />
                       <span>Settings</span>
@@ -343,10 +353,15 @@ const MobileNavbar = ({ user, logoutHandler }) => {
                   <BarChart3 size={18} />
                   <span className="font-medium">Dashboard</span>
                 </Link>
-                <Link to="/my-learning" className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors">
-                  <BookOpen size={18} />
-                  <span className="font-medium">My Learning</span>
-                </Link>
+
+                {/* Student-specific navigation - Only show for students */}
+                {user && user.role === "student" && (
+                  <Link to="/my-learning" className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors">
+                    <BookOpen size={18} />
+                    <span className="font-medium">My Learning</span>
+                  </Link>
+                )}
+
                 <Link to="/profile" className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors">
                   <User size={18} />
                   <span className="font-medium">Profile</span>

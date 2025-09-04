@@ -13,7 +13,7 @@ export const createCourse = async (req, res) => {
             coursePrice
         } = req.body;
 
-        console.log("Creating course with data:", req.body);
+
 
         if (!courseTitle || !category) {
             return res.status(400).json({
@@ -31,7 +31,7 @@ export const createCourse = async (req, res) => {
             }
         }
 
-        console.log("Validated price:", validatedPrice);
+
 
         // Create course with all fields
         const course = await Course.create({
@@ -44,7 +44,7 @@ export const createCourse = async (req, res) => {
             creator: req.id,
         });
 
-        console.log("Course created successfully:", course._id);
+
 
         return res.status(201).json({
             success: true,

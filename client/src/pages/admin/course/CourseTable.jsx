@@ -61,7 +61,9 @@ const CourseTable = () => {
       await publishCourse({ courseId, publish: !currentStatus }).unwrap();
       toast.success(`Course ${!currentStatus ? 'published' : 'unpublished'} successfully`);
     } catch (error) {
-      toast.error('Failed to update course status');
+      // Show the actual error message from the server
+      const errorMessage = error?.data?.message || 'Failed to update course status';
+      toast.error(errorMessage);
     }
   };
 

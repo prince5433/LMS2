@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useGetPurchasedCoursesQuery } from "@/features/api/purchaseApi";
+import { useGetInstructorStatsQuery } from "@/features/api/purchaseApi";
 import { useGetCreatorCoursesQuery } from "@/features/api/courseApi";
 import React from "react";
 import { useNavigate } from "react-router-dom";
@@ -45,10 +45,10 @@ import {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { data: purchaseData, isLoading: purchaseLoading, isError: purchaseError } = useGetPurchasedCoursesQuery();
+  const { data: statsData, isLoading: statsLoading, isError: statsError } = useGetInstructorStatsQuery();
   const { data: coursesData, isLoading: coursesLoading } = useGetCreatorCoursesQuery();
 
-  if (purchaseLoading || coursesLoading) {
+  if (statsLoading || coursesLoading) {
     return (
       <div className="p-6">
         <div className="animate-pulse space-y-4">
@@ -64,7 +64,7 @@ const Dashboard = () => {
     );
   }
 
-  if (purchaseError) {
+  if (statsError) {
     return (
       <div className="p-6">
         <Card>
@@ -73,7 +73,7 @@ const Dashboard = () => {
               Error loading dashboard data
             </h3>
             <p className="text-gray-600 dark:text-gray-400">
-              Failed to load purchase data. Please try again later.
+              Failed to load instructor stats. Please try again later.
             </p>
           </CardContent>
         </Card>
@@ -81,39 +81,61 @@ const Dashboard = () => {
     );
   }
 
-  const purchasedCourse = purchaseData?.purchasedCourse || [];
   const courses = coursesData?.courses || [];
+  const stats = statsData?.stats || {};
 
-  // Calculate metrics
-  const totalRevenue = purchasedCourse.reduce((acc, element) => acc + (element.amount || 0), 0);
-  const totalSales = purchasedCourse.length;
-  const totalCourses = courses.length;
+
+
+  // Calculate metrics from instructor stats API
+  const totalRevenue = stats.totalRevenue || 0;
+  const totalSales = stats.totalSales || 0;
+  const totalCourses = stats.totalCourses || courses.length;
+  const totalStudents = stats.totalStudents || 0;
   const publishedCourses = courses.filter(course => course.isPublished).length;
-  const totalStudents = courses.reduce((acc, course) => acc + (course.enrolledStudents?.length || 0), 0);
+  const recentSales = stats.recentSales || [];
+  const revenueByCourse = stats.revenueByCourse || {};
+  const salesByMonth = stats.salesByMonth || {};
 
-  // Prepare chart data
-  const courseData = purchasedCourse.map((course) => ({
-    name: course.courseId?.courseTitle || 'Unknown Course',
-    price: course.courseId?.coursePrice || 0,
-    sales: 1
+  // Check if instructor has any sales data
+  const hasSalesData = totalRevenue > 0 || totalSales > 0 || Object.keys(revenueByCourse).length > 0;
+
+  // Prepare chart data from real instructor stats
+  const courseData = Object.entries(revenueByCourse).map(([courseName, revenue]) => ({
+    name: courseName,
+    revenue: revenue,
+    sales: recentSales.filter(sale => sale.courseName === courseName).length
   }));
 
-  // Monthly revenue data (mock data - replace with actual monthly data)
-  const monthlyData = [
-    { month: 'Jan', revenue: totalRevenue * 0.1, students: totalStudents * 0.1 },
-    { month: 'Feb', revenue: totalRevenue * 0.15, students: totalStudents * 0.15 },
-    { month: 'Mar', revenue: totalRevenue * 0.2, students: totalStudents * 0.2 },
-    { month: 'Apr', revenue: totalRevenue * 0.25, students: totalStudents * 0.25 },
-    { month: 'May', revenue: totalRevenue * 0.3, students: totalStudents * 0.3 },
-    { month: 'Jun', revenue: totalRevenue * 1, students: totalStudents * 1 }
-  ];
+  // Monthly revenue data from real sales data
+  const monthlyData = Object.entries(salesByMonth)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([month, revenue]) => ({
+      month: new Date(month + '-01').toLocaleDateString('en-US', { month: 'short' }),
+      revenue: revenue,
+      students: Math.floor(revenue / 1000) // Estimate students based on revenue
+    }));
 
-  // Course performance data
-  const coursePerformance = courses.slice(0, 5).map(course => ({
-    name: course.courseTitle,
-    students: course.enrolledStudents?.length || 0,
-    revenue: (course.coursePrice || 0) * (course.enrolledStudents?.length || 0)
-  }));
+  // If no monthly data, create some sample data
+  if (monthlyData.length === 0) {
+    const currentDate = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      monthlyData.push({
+        month: date.toLocaleDateString('en-US', { month: 'short' }),
+        revenue: totalRevenue * (0.1 + i * 0.15),
+        students: Math.floor(totalStudents * (0.1 + i * 0.15))
+      });
+    }
+  }
+
+  // Course performance data from real revenue data
+  const coursePerformance = Object.entries(revenueByCourse)
+    .slice(0, 5)
+    .map(([courseName, revenue]) => ({
+      name: courseName,
+      revenue: revenue,
+      students: recentSales.filter(sale => sale.courseName === courseName).length
+    }));
 
   // Category distribution (mock data)
   const categoryData = [
@@ -218,6 +240,41 @@ const Dashboard = () => {
         />
       </div>
 
+      {/* No Sales Message */}
+      {!hasSalesData && (
+        <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <DollarSign className="mx-auto h-12 w-12 text-blue-500 mb-4" />
+              <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                No Sales Yet
+              </h3>
+              <p className="text-blue-700 dark:text-blue-300 mb-4">
+                You haven't made any sales yet. Once students start purchasing your courses, you'll see revenue data and analytics here.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button onClick={() => navigate('/admin/course/create')} className="bg-blue-600 hover:bg-blue-700">
+                  <BookOpen size={16} className="mr-2" />
+                  Create Your First Course
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/admin/course')} className="border-blue-300 text-blue-700 hover:bg-blue-50">
+                  <Eye size={16} className="mr-2" />
+                  Manage Existing Courses
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/course/search?query=')}
+                  className="border-green-300 text-green-700 hover:bg-green-50"
+                >
+                  <Users size={16} className="mr-2" />
+                  View as Student (Test Purchase)
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Revenue Trend */}
@@ -229,21 +286,35 @@ const Dashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip formatter={(value) => [`₹${value}`, 'Revenue']} />
-                <Area
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="#8884d8"
-                  fill="#8884d8"
-                  fillOpacity={0.3}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {hasSalesData ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => [`₹${value}`, 'Revenue']} />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#8884d8"
+                    fill="#8884d8"
+                    fillOpacity={0.3}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-center">
+                <div>
+                  <TrendingUp className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                  <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    No Revenue Data Yet
+                  </h4>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    Revenue trends will appear here once you start making sales
+                  </p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 

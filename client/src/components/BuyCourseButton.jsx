@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { useCreateCheckoutSessionMutation } from '@/features/api/purchaseApi'
-import { Loader2, CreditCard, Shield, ArrowRight } from 'lucide-react';
+import { useCreateCheckoutSessionMutation, useCompletePurchaseManuallyMutation } from '@/features/api/purchaseApi'
+import { Loader2, CreditCard, Shield, ArrowRight, TestTube } from 'lucide-react';
 import { toast } from 'sonner';
 const BuyCourseButton = ({ courseId }) => {
   const [createCheckoutSession, {data, isLoading ,isError,isSuccess,error}] = useCreateCheckoutSessionMutation();
+  const [completePurchaseManually, { isLoading: manualLoading }] = useCompletePurchaseManuallyMutation();
 
   const purchaseCourseHandler = async () => {
     try {
@@ -12,6 +13,18 @@ const BuyCourseButton = ({ courseId }) => {
       await createCheckoutSession({ courseId });
     } catch (error) {
       toast.error("Failed to start checkout process", { id: "checkout" });
+    }
+  }
+
+  const testPurchaseHandler = async () => {
+    try {
+      toast.loading("Testing manual purchase...", { id: "test-purchase" });
+      const result = await completePurchaseManually({ courseId }).unwrap();
+      toast.success("Test purchase completed! Check My Learning page.", { id: "test-purchase" });
+      console.log("Manual purchase result:", result);
+    } catch (error) {
+      toast.error(error?.data?.message || "Test purchase failed", { id: "test-purchase" });
+      console.error("Manual purchase error:", error);
     }
   }
 
@@ -66,6 +79,26 @@ const BuyCourseButton = ({ courseId }) => {
             <CreditCard className="mr-2 h-5 w-5" />
             Purchase Course
             <ArrowRight className="ml-2 h-5 w-5" />
+          </>
+        )}
+      </Button>
+
+      {/* Test Purchase Button - For Development/Testing */}
+      <Button
+        disabled={manualLoading}
+        variant="outline"
+        className='w-full h-10 text-sm border-orange-300 text-orange-700 hover:bg-orange-50'
+        onClick={testPurchaseHandler}
+      >
+        {manualLoading ? (
+          <>
+            <Loader2 className="animate-spin mr-2 h-4 w-4" />
+            Testing Purchase...
+          </>
+        ) : (
+          <>
+            <TestTube className="mr-2 h-4 w-4" />
+            Test Purchase (Free)
           </>
         )}
       </Button>
