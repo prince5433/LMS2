@@ -218,8 +218,29 @@ export const getCourseDetailWithPurchaseStatus = async (req, res) => {
       .populate({ path: "creator" })
       .populate({ path: "lectures" });
 
-    const purchased = await CoursePurchase.findOne({ userId, courseId });
-    console.log(purchased);
+    const purchased = await CoursePurchase.findOne({ 
+      userId, 
+      courseId
+    });
+    
+    // If purchase exists but enrollment is missing, fix it automatically
+    if (purchased && purchased.status === "pending") {
+      try {
+        // Complete the purchase and enrollment
+        purchased.status = "completed";
+        await purchased.save();
+        
+        // Add user to course enrollment
+        await User.findByIdAndUpdate(userId, { $addToSet: { enrolledCourses: courseId } });
+        await Course.findByIdAndUpdate(courseId, { $addToSet: { enrolledStudents: userId } });
+        
+        console.log("Auto-fixed pending purchase and enrollment");
+      } catch (error) {
+        console.log("Error auto-fixing enrollment:", error);
+      }
+    }
+    
+    console.log("Purchase status check:", purchased);
 
     if (!course) {
       return res.status(404).json({ message: "course not found!" });
@@ -227,10 +248,14 @@ export const getCourseDetailWithPurchaseStatus = async (req, res) => {
 
     return res.status(200).json({
       course,
-      purchased: !!purchased, // true if purchased, false otherwise
+      purchased: !!purchased, // true if purchased false otherwise
     });
   } catch (error) {
     console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch course details"
+    });
   }
 };
 
