@@ -55,6 +55,8 @@ const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
     'https://lms-2.vercel.app',
+    'https://lms-2-prince9369s-projects.vercel.app',
+    'https://lms-2-git-main-prince9369s-projects.vercel.app',
     'https://your-custom-domain.com',
     process.env.FRONTEND_URL
 ].filter(Boolean);
