@@ -177,6 +177,11 @@ const Navbar = () => {
 
         {/* User Actions */}
         <div className="flex items-center gap-3">
+          {/* DEBUG */}
+          <div className="text-xs bg-yellow-200 p-1 rounded">
+            {user ? `User: ${user.name}` : 'No User'}
+          </div>
+
           {user ? (
             <>
               {/* Notifications - Removed static notification for now */}
