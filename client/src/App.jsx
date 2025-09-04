@@ -1,7 +1,7 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { Suspense } from 'react'
 import MainLayout from './layout/MainLayout'
-import { ProtectedRoute } from './components/ProtectedRoutes'
+import { ProtectedRoute, AdminRoute } from './components/ProtectedRoutes'
 import PurchaseCourseProtectedRoute from './components/PurchaseCourseProtectedRoute'
 import ErrorBoundary from './components/ErrorBoundary'
 import NotFound from './pages/NotFound'
@@ -107,11 +107,11 @@ const appRouter = createBrowserRouter([
       {
         path: "admin",
         element: (
-          <ProtectedRoute>
+          <AdminRoute>
             <Suspense fallback={<PageLoadingSkeleton />}>
               <Sidebar />
             </Suspense>
-          </ProtectedRoute>
+          </AdminRoute>
         ),
         children: [
           {

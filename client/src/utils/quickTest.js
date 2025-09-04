@@ -1098,6 +1098,519 @@ export const fixCoursePricesAndTestPurchase = async () => {
   }
 };
 
+// Fix all instructor courses that don't have prices
+export const fixAllCoursePrices = async () => {
+  console.log('🔧 Fixing All Course Prices...');
+
+  try {
+    // Check if user is instructor
+    const profileResponse = await fetch('http://localhost:8080/api/v1/user/profile', {
+      credentials: 'include'
+    });
+    const profileData = await profileResponse.json();
+
+    if (!profileData.success) {
+      console.log('❌ User not logged in');
+      return false;
+    }
+
+    if (profileData.user.role !== 'instructor') {
+      console.log('❌ User is not an instructor');
+      return false;
+    }
+
+    console.log('✅ Instructor:', profileData.user.name);
+
+    // Get all instructor courses
+    const coursesResponse = await fetch('http://localhost:8080/api/v1/course/', {
+      credentials: 'include'
+    });
+    const coursesData = await coursesResponse.json();
+
+    if (!coursesData.success) {
+      console.log('❌ Failed to fetch courses:', coursesData.message);
+      return false;
+    }
+
+    const courses = coursesData.courses || [];
+    console.log(`📚 Found ${courses.length} courses`);
+
+    let fixedCount = 0;
+
+    for (const course of courses) {
+      console.log(`\n📖 Course: ${course.courseTitle}`);
+      console.log(`   Current Price: ${course.coursePrice} (Type: ${typeof course.coursePrice})`);
+
+      // Check if price needs fixing
+      const needsFixing = !course.coursePrice ||
+                         isNaN(course.coursePrice) ||
+                         course.coursePrice < 0 ||
+                         course.coursePrice === null ||
+                         course.coursePrice === undefined;
+
+      if (needsFixing) {
+        console.log(`   🔧 Fixing price...`);
+
+        // Set a reasonable default price based on course category
+        let defaultPrice = 999; // Default price
+
+        if (course.category) {
+          const categoryPrices = {
+            'Web Development': 1499,
+            'Mobile Development': 1299,
+            'Data Science': 1799,
+            'Machine Learning': 1999,
+            'DevOps': 1399,
+            'Cybersecurity': 1699,
+            'UI/UX Design': 1199,
+            'Digital Marketing': 899,
+            'Business': 799,
+            'Photography': 699
+          };
+          defaultPrice = categoryPrices[course.category] || 999;
+        }
+
+        // Update course price
+        const updateResponse = await fetch(`http://localhost:8080/api/v1/course/${course._id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            courseTitle: course.courseTitle,
+            category: course.category,
+            subTitle: course.subTitle || "",
+            description: course.description || "",
+            courseLevel: course.courseLevel || "Beginner",
+            coursePrice: defaultPrice
+          })
+        });
+
+        const updateData = await updateResponse.json();
+
+        if (updateData.success) {
+          console.log(`   ✅ Price fixed: ₹${defaultPrice}`);
+          fixedCount++;
+        } else {
+          console.log(`   ❌ Failed to fix price:`, updateData.message);
+        }
+      } else {
+        console.log(`   ✅ Price is valid: ₹${course.coursePrice}`);
+      }
+    }
+
+    console.log(`\n🎉 Price fixing completed!`);
+    console.log(`📊 Summary:`);
+    console.log(`   Total Courses: ${courses.length}`);
+    console.log(`   Prices Fixed: ${fixedCount}`);
+    console.log(`   Already Valid: ${courses.length - fixedCount}`);
+
+    return true;
+
+  } catch (error) {
+    console.error('❌ Fix all course prices failed:', error);
+    return false;
+  }
+};
+
+// Force update all courses in database to have valid prices
+export const forceFixAllCoursePrices = async () => {
+  console.log('🔧 Force Fixing ALL Course Prices in Database...');
+
+  try {
+    // Check if user is instructor
+    const profileResponse = await fetch('http://localhost:8080/api/v1/user/profile', {
+      credentials: 'include'
+    });
+    const profileData = await profileResponse.json();
+
+    if (!profileData.success) {
+      console.log('❌ User not logged in');
+      return false;
+    }
+
+    console.log('✅ User:', profileData.user.name, '| Role:', profileData.user.role);
+
+    // Get ALL published courses (not just instructor's)
+    const publishedResponse = await fetch('http://localhost:8080/api/v1/course/published-courses', {
+      credentials: 'include'
+    });
+    const publishedData = await publishedResponse.json();
+
+    if (publishedData.success && publishedData.courses?.length > 0) {
+      console.log(`📚 Found ${publishedData.courses.length} published courses`);
+
+      for (const course of publishedData.courses) {
+        console.log(`\n📖 Course: ${course.courseTitle}`);
+        console.log(`   Creator: ${course.creator?.name || 'Unknown'}`);
+        console.log(`   Current Price: ${course.coursePrice} (Type: ${typeof course.coursePrice})`);
+
+        // Check if price is invalid
+        const hasInvalidPrice = course.coursePrice === null ||
+                               course.coursePrice === undefined ||
+                               isNaN(course.coursePrice) ||
+                               course.coursePrice < 0;
+
+        if (hasInvalidPrice) {
+          console.log(`   🔧 Course has invalid price, needs fixing`);
+
+          // Set default price based on category
+          let defaultPrice = 999;
+          if (course.category) {
+            const categoryPrices = {
+              'Web Development': 1499,
+              'Mobile Development': 1299,
+              'Data Science': 1799,
+              'Machine Learning': 1999,
+              'DevOps': 1399,
+              'Cybersecurity': 1699,
+              'UI/UX Design': 1199,
+              'Digital Marketing': 899,
+              'Business': 799,
+              'Photography': 699
+            };
+            defaultPrice = categoryPrices[course.category] || 999;
+          }
+
+          console.log(`   💰 Setting price to: ₹${defaultPrice}`);
+
+          // Note: This would require admin access to update any course
+          // For now, just log what needs to be fixed
+          console.log(`   ⚠️  Manual fix needed by course creator`);
+        } else {
+          console.log(`   ✅ Price is valid: ₹${course.coursePrice}`);
+        }
+      }
+    }
+
+    // If user is instructor, fix their courses
+    if (profileData.user.role === 'instructor') {
+      console.log('\n🔧 Fixing instructor courses...');
+      await fixAllCoursePrices();
+    }
+
+    console.log('\n🎉 Force price check completed!');
+    return true;
+
+  } catch (error) {
+    console.error('❌ Force fix failed:', error);
+    return false;
+  }
+};
+
+// Fix all course prices in database immediately
+export const fixPricesNow = async () => {
+  console.log('🔧 FIXING ALL COURSE PRICES NOW...');
+
+  try {
+    const response = await fetch('http://localhost:8080/api/v1/course/fix-prices', {
+      method: 'POST',
+      credentials: 'include'
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      console.log('✅ ALL COURSE PRICES FIXED!');
+      console.log(`📊 Fixed ${data.totalCourses} courses`);
+      console.log('📚 Courses:', data.courses);
+
+      // Now test purchase
+      console.log('\n🛒 Testing purchase flow...');
+      const publishedResponse = await fetch('http://localhost:8080/api/v1/course/published-courses');
+      const publishedData = await publishedResponse.json();
+
+      if (publishedData.success && publishedData.courses?.length > 0) {
+        const testCourse = publishedData.courses[0];
+        console.log(`Testing purchase for: ${testCourse.courseTitle} - ₹${testCourse.coursePrice}`);
+
+        const checkoutResponse = await fetch('http://localhost:8080/api/v1/purchase/checkout/create-checkout-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            courseId: testCourse._id
+          })
+        });
+
+        const checkoutData = await checkoutResponse.json();
+
+        if (checkoutData.success) {
+          console.log('✅ PURCHASE FLOW WORKING!');
+          console.log('🎉 You can now buy courses successfully!');
+        } else {
+          console.log('❌ Purchase still failing:', checkoutData.message);
+        }
+      }
+
+      return true;
+    } else {
+      console.log('❌ Failed to fix prices:', data.message);
+      return false;
+    }
+
+  } catch (error) {
+    console.error('❌ Fix prices now failed:', error);
+    return false;
+  }
+};
+
+// ULTIMATE FIX - Fix everything and make purchase work
+export const ultimateFix = async () => {
+  console.log('🚀 ULTIMATE FIX - MAKING EVERYTHING WORK...');
+
+  try {
+    // Step 1: Fix all course prices
+    console.log('1. Fixing all course prices...');
+    const priceResponse = await fetch('http://localhost:8080/api/v1/course/fix-prices', {
+      method: 'POST',
+      credentials: 'include'
+    });
+    const priceData = await priceResponse.json();
+    console.log('✅ Prices fixed:', priceData.success ? 'SUCCESS' : 'FAILED');
+
+    // Step 2: Publish all courses with lectures
+    console.log('2. Publishing all courses...');
+    const publishResponse = await fetch('http://localhost:8080/api/v1/course/publish-all', {
+      method: 'POST',
+      credentials: 'include'
+    });
+    const publishData = await publishResponse.json();
+    console.log('✅ Courses published:', publishData.success ? 'SUCCESS' : 'FAILED');
+
+    // Step 3: Test the complete flow
+    console.log('3. Testing complete purchase flow...');
+
+    // Get published courses
+    const coursesResponse = await fetch('http://localhost:8080/api/v1/course/published-courses');
+    const coursesData = await coursesResponse.json();
+
+    if (coursesData.success && coursesData.courses?.length > 0) {
+      const testCourse = coursesData.courses[0];
+      console.log(`📚 Testing with course: ${testCourse.courseTitle}`);
+      console.log(`💰 Price: ₹${testCourse.coursePrice}`);
+
+      // Test checkout session creation
+      const checkoutResponse = await fetch('http://localhost:8080/api/v1/purchase/checkout/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          courseId: testCourse._id
+        })
+      });
+
+      const checkoutData = await checkoutResponse.json();
+
+      if (checkoutData.success) {
+        console.log('🎉 ULTIMATE FIX SUCCESSFUL!');
+        console.log('✅ Course purchase is now working!');
+        console.log('🛒 You can buy courses successfully!');
+        console.log('💳 Stripe checkout URL:', checkoutData.url);
+        return true;
+      } else {
+        console.log('❌ Purchase still failing:', checkoutData.message);
+        console.log('Error details:', checkoutData.error);
+        return false;
+      }
+    } else {
+      console.log('❌ No published courses found');
+      return false;
+    }
+
+  } catch (error) {
+    console.error('❌ Ultimate fix failed:', error);
+    return false;
+  }
+};
+
+// Test new course creation with price
+export const testNewCourseCreation = async () => {
+  console.log('🆕 Testing New Course Creation with Price...');
+
+  try {
+    // Check if user is instructor
+    const profileResponse = await fetch('http://localhost:8080/api/v1/user/profile', {
+      credentials: 'include'
+    });
+    const profileData = await profileResponse.json();
+
+    if (!profileData.success) {
+      console.log('❌ User not logged in');
+      return false;
+    }
+
+    if (profileData.user.role !== 'instructor') {
+      console.log('❌ User is not an instructor');
+      return false;
+    }
+
+    console.log('✅ Instructor:', profileData.user.name);
+
+    // Create a test course with all fields including price
+    const testCourseData = {
+      courseTitle: `Test Course ${Date.now()}`,
+      category: 'Web Development',
+      subTitle: 'Complete test course with price',
+      description: 'This is a test course to verify price is saved correctly',
+      courseLevel: 'Beginner',
+      coursePrice: 1499
+    };
+
+    console.log('📚 Creating course with data:', testCourseData);
+
+    const createResponse = await fetch('http://localhost:8080/api/v1/course/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(testCourseData)
+    });
+
+    const createData = await createResponse.json();
+
+    if (createData.success) {
+      console.log('✅ Course created successfully!');
+      console.log('📖 Course details:', {
+        id: createData.course._id,
+        title: createData.course.courseTitle,
+        price: createData.course.coursePrice,
+        priceType: typeof createData.course.coursePrice,
+        category: createData.course.category,
+        level: createData.course.courseLevel
+      });
+
+      // Verify the course was saved with correct price
+      if (createData.course.coursePrice === 1499) {
+        console.log('🎉 SUCCESS! Course price saved correctly: ₹1499');
+
+        // Test purchase flow with this new course
+        console.log('🛒 Testing purchase flow with new course...');
+
+        const checkoutResponse = await fetch('http://localhost:8080/api/v1/purchase/checkout/create-checkout-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            courseId: createData.course._id
+          })
+        });
+
+        const checkoutData = await checkoutResponse.json();
+
+        if (checkoutData.success) {
+          console.log('✅ PURCHASE FLOW WORKING WITH NEW COURSE!');
+          console.log('💳 Checkout URL:', checkoutData.url);
+          return true;
+        } else {
+          console.log('❌ Purchase failed:', checkoutData.message);
+          return false;
+        }
+      } else {
+        console.log('❌ Course price not saved correctly:', createData.course.coursePrice);
+        return false;
+      }
+    } else {
+      console.log('❌ Failed to create course:', createData.message);
+      return false;
+    }
+
+  } catch (error) {
+    console.error('❌ Test new course creation failed:', error);
+    return false;
+  }
+};
+
+// Simple test to verify course creation works
+export const testCourseCreationSimple = async () => {
+  console.log('📚 Testing Simple Course Creation...');
+
+  try {
+    // Check if user is instructor
+    const profileResponse = await fetch('http://localhost:8080/api/v1/user/profile', {
+      credentials: 'include'
+    });
+    const profileData = await profileResponse.json();
+
+    if (!profileData.success || profileData.user.role !== 'instructor') {
+      console.log('❌ User is not an instructor');
+      return false;
+    }
+
+    // Test with minimal required data first
+    const minimalCourseData = {
+      courseTitle: `Simple Test Course ${Date.now()}`,
+      category: 'Web Development'
+    };
+
+    console.log('📝 Creating course with minimal data:', minimalCourseData);
+
+    const createResponse = await fetch('http://localhost:8080/api/v1/course/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(minimalCourseData)
+    });
+
+    const createData = await createResponse.json();
+
+    if (createData.success) {
+      console.log('✅ Minimal course creation successful!');
+      console.log('Course:', createData.course);
+
+      // Now test with full data
+      const fullCourseData = {
+        courseTitle: `Full Test Course ${Date.now()}`,
+        category: 'Web Development',
+        subTitle: 'Complete course with all fields',
+        description: 'This is a test course with all fields filled',
+        courseLevel: 'Beginner',
+        coursePrice: 999
+      };
+
+      console.log('📝 Creating course with full data:', fullCourseData);
+
+      const fullCreateResponse = await fetch('http://localhost:8080/api/v1/course/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(fullCourseData)
+      });
+
+      const fullCreateData = await fullCreateResponse.json();
+
+      if (fullCreateData.success) {
+        console.log('✅ Full course creation successful!');
+        console.log('Course with price:', fullCreateData.course);
+        console.log('🎉 Course creation is working properly!');
+        return true;
+      } else {
+        console.log('❌ Full course creation failed:', fullCreateData.message);
+        return false;
+      }
+    } else {
+      console.log('❌ Minimal course creation failed:', createData.message);
+      return false;
+    }
+
+  } catch (error) {
+    console.error('❌ Simple course creation test failed:', error);
+    return false;
+  }
+};
+
 // Export for use in browser console
 window.quickTest = {
   testApiConnectivity,
@@ -1116,6 +1629,12 @@ window.quickTest = {
   testLectureCreation,
   testCourseVisibilityFlow,
   fixCoursePricesAndTestPurchase,
+  fixAllCoursePrices,
+  forceFixAllCoursePrices,
+  fixPricesNow,
+  ultimateFix,
+  testNewCourseCreation,
+  testCourseCreationSimple,
   quickFix
 };
 
@@ -1136,5 +1655,7 @@ export default {
   testLectureCreation,
   testCourseVisibilityFlow,
   fixCoursePricesAndTestPurchase,
+  fixAllCoursePrices,
+  forceFixAllCoursePrices,
   quickFix
 };

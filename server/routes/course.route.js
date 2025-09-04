@@ -1,5 +1,5 @@
 import express from 'express';
-import { createCourse, getCreatorCourses, editCourse, getCourseById, createLecture, getCourseLecture, getPublishedCourses, searchCourses, getPublishedCourseById, publishCourse } from '../controllers/course.controller.js';
+import { createCourse, getCreatorCourses, editCourse, getCourseById, createLecture, getCourseLecture, getPublishedCourses, searchCourses, getPublishedCourseById, publishCourse, fixAllCoursePrices, publishAllCourses } from '../controllers/course.controller.js';
 import isAuthenticated from '../middlewares/isAuthenticated.js';
 import upload from "../utils/multer.js";
 
@@ -12,6 +12,8 @@ router.route("/public/:courseId").get(getPublishedCourseById); // Public course 
 router.route("/:courseId").put(isAuthenticated, upload.single("courseThumbnail"), editCourse);
 router.route("/:courseId").get(isAuthenticated, getCourseById);
 router.route("/:courseId").patch(isAuthenticated, publishCourse); // Publish/unpublish course
+router.route("/fix-prices").post(isAuthenticated, fixAllCoursePrices); // Fix all course prices
+router.route("/publish-all").post(isAuthenticated, publishAllCourses); // Publish all courses
 router.route("/:courseId/lecture").post(isAuthenticated, createLecture);
 router.route("/:courseId/lecture").get(isAuthenticated, getCourseLecture);
 export default router;

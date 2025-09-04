@@ -10,10 +10,10 @@ export const courseApi = createApi({
     baseQuery: fetchBaseQuery({ baseUrl: COURSE_API, credentials: 'include' }),
     endpoints: (builder) => ({
         createCourse: builder.mutation({
-            query: ({ courseTitle, category }) => ({
+            query: (courseData) => ({
                 url: '',
                 method: 'POST',
-                body: { courseTitle, category },
+                body: courseData,
             }),
             invalidatesTags: ['Refetch Creator Course '],
             //invalidatetags is used to refetch the data after creating a course
@@ -41,10 +41,10 @@ export const courseApi = createApi({
             providesTags: ['Refetch Creator Course '],
         }),
         createLecture: builder.mutation({
-            query: ({ lectureTitle, courseId }) => ({
+            query: ({ courseId, ...lectureData }) => ({
                 url: `/${courseId}/lecture`,
                 method: 'POST',
-                body: { lectureTitle },
+                body: lectureData,
             }),
             invalidatesTags: ['Refetch Creator Course '],
         }),

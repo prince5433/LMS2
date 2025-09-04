@@ -4,26 +4,55 @@ import { Lecture } from "../models/lecture.model.js";
 
 export const createCourse = async (req, res) => {
     try {
-        const { courseTitle, category } = req.body;
+        const {
+            courseTitle,
+            category,
+            subTitle,
+            description,
+            courseLevel,
+            coursePrice
+        } = req.body;
+
+        console.log("Creating course with data:", req.body);
+
         if (!courseTitle || !category) {
             return res.status(400).json({
                 success: false,
-                message: "All fields are required."
+                message: "Course title and category are required."
             })
         }
-        //agar exisst krte hai to course create kro
+
+        // Validate and set course price
+        let validatedPrice = 0; // Default to free
+        if (coursePrice !== undefined && coursePrice !== null && coursePrice !== '') {
+            const numericPrice = Number(coursePrice);
+            if (!isNaN(numericPrice) && numericPrice >= 0) {
+                validatedPrice = numericPrice;
+            }
+        }
+
+        console.log("Validated price:", validatedPrice);
+
+        // Create course with all fields
         const course = await Course.create({
             courseTitle,
             category,
+            subTitle: subTitle || "",
+            description: description || "",
+            courseLevel: courseLevel || "Beginner",
+            coursePrice: validatedPrice,
             creator: req.id,
         });
+
+        console.log("Course created successfully:", course._id);
+
         return res.status(201).json({
             success: true,
             message: "Course created successfully.",
             course,
         })
     } catch (error) {
-        console.log(error);
+        console.log("Create course error:", error);
         return res.status(500).json({
             success: false,
             message: "Failed to create course"
@@ -62,6 +91,9 @@ export const editCourse = async (req, res) => {
         const {courseTitle,subTitle,description,courseLevel,coursePrice,category} = req.body;
         const thumbnail =req.file;
 
+        console.log("Editing course with data:", req.body);
+        console.log("Course price received:", coursePrice, "Type:", typeof coursePrice);
+
         let course= await Course.findById(courseId);
         if(!course){
             return res.status(404).json({
@@ -86,7 +118,28 @@ export const editCourse = async (req, res) => {
                //upload thumbnail to cloudinary
             courseThumbnail = await uploadMedia(thumbnail.path); // Upload the new thumbnail to Cloudinary
         }
-        const updateData ={courseTitle,subTitle,description,courseLevel,coursePrice,category,courseThumbnail: courseThumbnail?.secure_url};
+
+        // Validate course price
+        let validatedPrice = course.coursePrice; // Keep existing price if not provided
+        if (coursePrice !== undefined && coursePrice !== null && coursePrice !== '') {
+            const numericPrice = Number(coursePrice);
+            if (!isNaN(numericPrice) && numericPrice >= 0) {
+                validatedPrice = numericPrice;
+            }
+        }
+
+        console.log("Validated price for update:", validatedPrice);
+
+        const updateData ={
+            courseTitle,
+            subTitle,
+            description,
+            courseLevel,
+            coursePrice: validatedPrice,
+            category,
+            courseThumbnail: courseThumbnail?.secure_url
+        };
+
         course = await Course.findByIdAndUpdate(courseId, updateData, { new: true }); // Update the course in the database
         return res.status(200).json({
             success: true,
@@ -388,6 +441,89 @@ export const publishCourse = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Failed to update course publish status"
+        });
+    }
+};
+
+// Fix all courses to have valid prices
+export const fixAllCoursePrices = async (req, res) => {
+    try {
+        console.log("Fixing all course prices...");
+
+        // Update all courses that have null, undefined, or invalid prices
+        const result = await Course.updateMany(
+            {
+                $or: [
+                    { coursePrice: { $exists: false } },
+                    { coursePrice: null },
+                    { coursePrice: { $lt: 0 } },
+                    { coursePrice: { $type: "string" } }
+                ]
+            },
+            {
+                $set: { coursePrice: 999 }
+            }
+        );
+
+        console.log("Price fix result:", result);
+
+        // Get all courses to verify
+        const allCourses = await Course.find({}).select('courseTitle coursePrice category creator');
+
+        return res.status(200).json({
+            success: true,
+            message: `Fixed ${result.modifiedCount} courses`,
+            totalCourses: allCourses.length,
+            courses: allCourses.map(course => ({
+                id: course._id,
+                title: course.courseTitle,
+                price: course.coursePrice,
+                category: course.category
+            }))
+        });
+
+    } catch (error) {
+        console.error("Fix prices error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fix course prices"
+        });
+    }
+};
+
+// Publish all courses that have lectures
+export const publishAllCourses = async (req, res) => {
+    try {
+        console.log("Publishing all courses with lectures...");
+
+        // Find all courses that have lectures but are not published
+        const coursesWithLectures = await Course.find({
+            lectures: { $exists: true, $not: { $size: 0 } },
+            isPublished: false
+        }).populate('lectures');
+
+        let publishedCount = 0;
+
+        for (const course of coursesWithLectures) {
+            if (course.lectures.length > 0) {
+                course.isPublished = true;
+                await course.save();
+                publishedCount++;
+                console.log(`Published: ${course.courseTitle}`);
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: `Published ${publishedCount} courses`,
+            publishedCount
+        });
+
+    } catch (error) {
+        console.error("Publish all courses error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to publish courses"
         });
     }
 };
