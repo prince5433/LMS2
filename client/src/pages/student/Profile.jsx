@@ -54,6 +54,13 @@ const Profile = () => {
     refetch();
   }, []);
 
+  // Initialize form with user data when it loads
+  useEffect(() => {
+    if (data?.user) {
+      setName(data.user.name || '');
+    }
+  }, [data]);
+
   useEffect(() => {
     if (isSuccess) {
       refetch();
@@ -66,9 +73,21 @@ const Profile = () => {
 
   if (isLoading) return <h1>Profile Loading...</h1>;
 
-  const user = data && data.user;
+  const user = data?.user;
 
   console.log(user);
+
+  // If user data is not available, show loading or error state
+  if (!user) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 my-10">
+        <div className="text-center py-8">
+          <h1 className="text-xl text-gray-600">Unable to load profile data</h1>
+          <p className="text-gray-500 mt-2">Please try refreshing the page</p>
+        </div>
+      </div>
+    );
+  }
 
 
   return (
@@ -89,7 +108,7 @@ const Profile = () => {
             <h1 className="font-semibold text-gray-900 dark:text-gray-100 ">
               Name:
               <span className="font-normal text-gray-700 dark:text-gray-300 ml-2">
-                {user.name}
+                {user?.name || 'Not provided'}
               </span>
             </h1>
           </div>
@@ -97,7 +116,7 @@ const Profile = () => {
             <h1 className="font-semibold text-gray-900 dark:text-gray-100 ">
               Email:
               <span className="font-normal text-gray-700 dark:text-gray-300 ml-2">
-                {user.email}
+                {user?.email || 'Not provided'}
               </span>
             </h1>
           </div>
@@ -105,7 +124,7 @@ const Profile = () => {
             <h1 className="font-semibold text-gray-900 dark:text-gray-100 ">
               Role:
               <span className="font-normal text-gray-700 dark:text-gray-300 ml-2">
-                {user.role.toUpperCase()}
+                {user?.role?.toUpperCase() || 'Not provided'}
               </span>
             </h1>
           </div>
@@ -166,7 +185,7 @@ const Profile = () => {
       <div>
         <h1 className="font-medium text-lg">Courses you're enrolled in</h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 my-5">
-          {user.enrolledCourses.length === 0 ? (
+          {!user?.enrolledCourses || user.enrolledCourses.length === 0 ? (
             <h1>You haven't enrolled yet</h1>
           ) : (
             user.enrolledCourses.map((course) => (

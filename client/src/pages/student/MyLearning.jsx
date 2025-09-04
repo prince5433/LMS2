@@ -1,5 +1,6 @@
 import React from 'react'
 import { useLoadUserQuery } from '@/features/api/authApi';
+import { useGetPurchasedCoursesQuery } from '@/features/api/purchaseApi';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +14,8 @@ import {
   Star,
   Filter,
   Search,
-  MoreHorizontal
+  MoreHorizontal,
+  RefreshCw
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -27,13 +29,36 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 function MyLearning() {
-  const { data, isLoading } = useLoadUserQuery();
+  const { data: userData, isLoading: userLoading, refetch: refetchUser } = useLoadUserQuery();
+  const { data: purchasedData, isLoading: purchasedLoading, refetch: refetchPurchased } = useGetPurchasedCoursesQuery();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = React.useState("");
   const [filterStatus, setFilterStatus] = React.useState("all");
 
-  const user = data?.user;
-  const myLearning = user?.enrolledCourses || [];
+  const user = userData?.user;
+  const purchasedCourses = purchasedData?.purchasedCourses || [];
+
+  // Extract courses from purchases and also include enrolled courses from user profile
+  const purchasedCoursesData = purchasedCourses.map(purchase => purchase.courseId).filter(Boolean);
+  const enrolledCoursesData = user?.enrolledCourses || [];
+
+  // Combine both sources and remove duplicates
+  const allCourses = [...purchasedCoursesData, ...enrolledCoursesData];
+  const myLearning = allCourses.filter((course, index, self) =>
+    course && self.findIndex(c => c._id === course._id) === index
+  );
+
+  console.log('My Learning Data:', {
+    userLoading,
+    purchasedLoading,
+    userData: userData?.user ? 'User data loaded' : 'No user data',
+    purchasedData: purchasedData ? 'Purchase data loaded' : 'No purchase data',
+    purchasedCoursesRaw: purchasedData?.purchasedCourses,
+    purchasedCourses: purchasedCoursesData.length,
+    enrolledCourses: enrolledCoursesData.length,
+    totalCourses: myLearning.length,
+    courses: myLearning
+  });
 
   // Filter courses based on search and status
   const filteredCourses = myLearning.filter(course => {
@@ -45,9 +70,11 @@ function MyLearning() {
     return matchesSearch && matchesStatus;
   });
 
-  // Mock function to get course progress (you'll need to implement this based on your data structure)
-  const getProgress = () => {
+  // Function to get course progress (mock implementation for now)
+  const getProgress = (course) => {
     // This is a mock implementation - replace with actual progress calculation
+    // You can implement this based on your course progress data structure
+    if (!course) return 0;
     return Math.floor(Math.random() * 101);
   };
 
@@ -59,10 +86,29 @@ function MyLearning() {
     certificatesEarned: myLearning.filter(course => getProgress(course) === 100).length
   };
 
+  const isLoading = userLoading || purchasedLoading;
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-        <MyLearningSkeleton />
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-8">
+            <h1 className="text-xl text-gray-600">Loading your learning dashboard...</h1>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-8">
+            <h1 className="text-xl text-gray-600">Unable to load your learning data</h1>
+            <p className="text-gray-500 mt-2">Please try refreshing the page</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -80,10 +126,23 @@ function MyLearning() {
               Track your progress and continue your learning journey
             </p>
           </div>
-          <Button onClick={() => navigate('/course/search?query=')} className="btn-primary">
-            <BookOpen size={16} className="mr-2" />
-            Browse Courses
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => {
+                refetchUser();
+                refetchPurchased();
+              }}
+              variant="outline"
+              size="sm"
+            >
+              <RefreshCw size={16} className="mr-2" />
+              Refresh
+            </Button>
+            <Button onClick={() => navigate('/course/search?query=')} className="btn-primary">
+              <BookOpen size={16} className="mr-2" />
+              Browse Courses
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -171,7 +230,16 @@ function MyLearning() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+          <Card
+            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => {
+              if (myLearning.length > 0) {
+                navigate(`/course-progress/${myLearning[0]._id}`);
+              } else {
+                navigate('/course/search?query=');
+              }
+            }}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -183,7 +251,18 @@ function MyLearning() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+          <Card
+            className="bg-gradient-to-r from-green-500 to-green-600 text-white cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => {
+              // For now, show completed courses. In future, implement certificates page
+              const completedCourses = myLearning.filter(course => getProgress(course) === 100);
+              if (completedCourses.length > 0) {
+                alert(`You have ${completedCourses.length} completed course(s). Certificate feature coming soon!`);
+              } else {
+                alert('Complete a course to earn certificates!');
+              }
+            }}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -195,7 +274,13 @@ function MyLearning() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+          <Card
+            className="bg-gradient-to-r from-purple-500 to-purple-600 text-white cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => {
+              // For now, navigate to profile or show goals modal
+              navigate('/profile');
+            }}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -307,7 +392,7 @@ const CourseCard = ({ course, progress }) => {
   };
 
   return (
-    <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/course-progress/${course._id}`)}>
+    <Card className="hover:shadow-lg transition-shadow">
       <CardContent className="p-6">
         <div className="flex items-center gap-4">
           <img
@@ -349,25 +434,51 @@ const CourseCard = ({ course, progress }) => {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button size="sm" className="btn-primary">
+            <Button
+              size="sm"
+              className="btn-primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/course-progress/${course._id}`);
+              }}
+            >
               {progress === 0 ? 'Start' : progress === 100 ? 'Review' : 'Continue'}
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="ghost">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <MoreHorizontal size={16} />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => navigate(`/course-detail/${course._id}`)}>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/course-detail/${course._id}`);
+                  }}
+                >
                   View Details
                 </DropdownMenuItem>
                 {progress === 100 && (
-                  <DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert('Certificate download feature coming soon!');
+                    }}
+                  >
                     Download Certificate
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    alert('Remove from learning feature coming soon!');
+                  }}
+                >
                   Remove from Learning
                 </DropdownMenuItem>
               </DropdownMenuContent>

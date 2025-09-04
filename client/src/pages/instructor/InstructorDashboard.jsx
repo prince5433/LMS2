@@ -16,65 +16,71 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useGetCreatorCoursesQuery } from '@/features/api/courseApi';
+import { useGetInstructorStatsQuery } from '@/features/api/purchaseApi';
 
 const InstructorDashboard = () => {
   const { user } = useSelector((store) => store.auth);
 
-  // Fetch real course data
+  // Fetch real course data and stats
   const { data: coursesData, isLoading: coursesLoading, isError: coursesError } = useGetCreatorCoursesQuery();
+  const { data: statsData, isLoading: statsLoading, refetch: refetchStats } = useGetInstructorStatsQuery();
 
   const courses = coursesData?.courses || [];
-
-
-
-  // Temporary fallback data for testing if no real courses exist
-  const fallbackCourses = courses.length === 0 ? [
-    {
-      _id: "67220e6dc88ae75d238fe6d0", // Use a real-looking MongoDB ObjectId
-      courseTitle: "Sample React Course",
-      coursePrice: 999,
-      isPublished: true,
-      enrolledStudents: 25,
-      updatedAt: new Date().toISOString(),
-      courseThumbnail: null
-    },
-    {
-      _id: "67220e6dc88ae75d238fe6d1",
-      courseTitle: "JavaScript Fundamentals",
-      coursePrice: 799,
-      isPublished: true,
-      enrolledStudents: 15,
-      updatedAt: new Date().toISOString(),
-      courseThumbnail: null
-    }
-  ] : courses;
-
-  // Calculate stats from real data
   const stats = {
-    totalCourses: fallbackCourses.length,
-    totalStudents: fallbackCourses.reduce((total, course) => total + (course.enrolledStudents || 0), 0),
-    totalRevenue: fallbackCourses.reduce((total, course) => total + ((course.coursePrice || 0) * (course.enrolledStudents || 0)), 0),
-    avgRating: fallbackCourses.length > 0 ? (fallbackCourses.reduce((total, course) => total + (course.rating || 4.5), 0) / fallbackCourses.length).toFixed(1) : 4.8
+    ...statsData?.stats,
+    totalRevenue: statsData?.stats?.totalRevenue || 0,
+    totalSales: statsData?.stats?.totalSales || 0,
+    totalStudents: statsData?.stats?.totalStudents || 0,
+    totalCourses: statsData?.stats?.totalCourses || courses.length,
+    revenueByCourse: statsData?.stats?.revenueByCourse || {},
+    salesByMonth: statsData?.stats?.salesByMonth || {},
+    recentSales: statsData?.stats?.recentSales || [],
+    avgRating: courses.length > 0 ?
+      (courses.reduce((total, course) => total + (course.rating || 4.5), 0) / courses.length).toFixed(1) :
+      "4.5"
   };
 
+
+
   // Get recent courses (limit to 3 for dashboard)
-  const recentCourses = fallbackCourses.slice(0, 3).map(course => ({
+  const recentCourses = courses.slice(0, 3).map(course => ({
     id: course._id,
     title: course.courseTitle,
-    students: course.enrolledStudents || 0,
-    revenue: (course.coursePrice || 0) * (course.enrolledStudents || 0),
+    students: course.enrolledStudents?.length || 0,
+    revenue: stats.revenueByCourse[course.courseTitle] || 0,
     rating: course.rating || 4.5,
     status: course.isPublished ? "published" : "draft",
     lastUpdated: course.updatedAt ? new Date(course.updatedAt).toLocaleDateString() : "N/A",
     thumbnail: course.courseThumbnail
   }));
 
-  const recentActivity = [
-    { action: "New student enrolled in React Course", time: "2 hours ago" },
-    { action: "Course review received (5 stars)", time: "4 hours ago" },
-    { action: "Payment received: $299", time: "6 hours ago" },
-    { action: "New student enrolled in JavaScript Course", time: "1 day ago" }
-  ];
+  // Use recent sales from API for activity
+  const recentActivity = stats.recentSales.slice(0, 4).map(sale => ({
+    action: `Payment received: ₹${sale.amount} for ${sale.courseName}`,
+    time: new Date(sale.date).toLocaleDateString()
+  }));
+
+  // Add fallback activity if no sales
+  if (recentActivity.length === 0) {
+    recentActivity.push(
+      { action: "Welcome to your instructor dashboard!", time: "Today" },
+      { action: "Create your first course to start earning", time: "Today" }
+    );
+  }
+
+  const isLoading = coursesLoading || statsLoading;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center py-8">
+            <h1 className="text-xl text-gray-600">Loading your dashboard...</h1>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

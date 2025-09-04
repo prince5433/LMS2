@@ -1,4 +1,5 @@
 import { User } from "../models/user.model.js";
+import { Course } from "../models/course.model.js";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../utils/generateToken.js";
 import { deleteMediaFromCloudinary, uploadMedia } from "../utils/cloudinary.js";
@@ -241,3 +242,44 @@ export const updateProfile = async (req, res) => {
         })
     }
 }
+
+// Manual enrollment function for testing
+export const enrollInCourse = async (req, res) => {
+    try {
+        const userId = req.id;
+        const { courseId } = req.body;
+
+        if (!courseId) {
+            return res.status(400).json({
+                success: false,
+                message: "Course ID is required"
+            });
+        }
+
+        // Add course to user's enrolled courses
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { $addToSet: { enrolledCourses: courseId } },
+            { new: true }
+        ).populate("enrolledCourses");
+
+        // Add user to course's enrolled students
+        await Course.findByIdAndUpdate(
+            courseId,
+            { $addToSet: { enrolledStudents: userId } },
+            { new: true }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Successfully enrolled in course",
+            user: updatedUser
+        });
+    } catch (error) {
+        console.error("Enrollment error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to enroll in course"
+        });
+    }
+};

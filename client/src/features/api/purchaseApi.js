@@ -32,8 +32,22 @@ export const purchaseApi = createApi({
                 url: '/',
                 method: 'GET',
             }),
+            providesTags: ['PurchasedCourses'],
+        }),
+        getInstructorStats: builder.query({
+            query: () => ({
+                url: '/instructor/stats',
+                method: 'GET',
+            }),
+            providesTags: ['InstructorStats'],
         }),
     }),
 });
 
-export const { useCreateCheckoutSessionMutation, useStripeWebhookMutation, useGetCourseDetailWithStatusQuery, useGetPurchasedCoursesQuery } = purchaseApi;
+export const {
+    useCreateCheckoutSessionMutation,
+    useStripeWebhookMutation,
+    useGetCourseDetailWithStatusQuery,
+    useGetPurchasedCoursesQuery,
+    useGetInstructorStatsQuery
+} = purchaseApi;

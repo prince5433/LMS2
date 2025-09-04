@@ -167,20 +167,93 @@ export const getCourseDetailWithPurchaseStatus = async (req, res) => {
   }
 };
 
-export const getAllPurchasedCourse = async (_, res) => {
+export const getAllPurchasedCourse = async (req, res) => {
   try {
-    const purchasedCourse = await CoursePurchase.find({
+    const userId = req.id;
+    const purchasedCourses = await CoursePurchase.find({
+      userId: userId,
       status: "completed",
-    }).populate("courseId");
-    if (!purchasedCourse) {
-      return res.status(404).json({
-        purchasedCourse: [],
-      });
-    }
+    }).populate({
+      path: "courseId",
+      populate: {
+        path: "creator",
+        select: "name email"
+      }
+    });
+
     return res.status(200).json({
-      purchasedCourse,
+      success: true,
+      purchasedCourses: purchasedCourses || [],
     });
   } catch (error) {
-    console.log(error);
+    console.error("Error fetching purchased courses:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch purchased courses"
+    });
+  }
+};
+
+// Get instructor revenue and stats
+export const getInstructorStats = async (req, res) => {
+  try {
+    const instructorId = req.id;
+
+    // Get all courses created by this instructor
+    const instructorCourses = await Course.find({ creator: instructorId });
+    const courseIds = instructorCourses.map(course => course._id);
+
+    // Get all completed purchases for instructor's courses
+    const purchases = await CoursePurchase.find({
+      courseId: { $in: courseIds },
+      status: "completed"
+    }).populate("courseId").populate("userId", "name email");
+
+    // Calculate stats
+    const totalRevenue = purchases.reduce((sum, purchase) => sum + purchase.amount, 0);
+    const totalSales = purchases.length;
+    const totalStudents = new Set(purchases.map(p => p.userId._id.toString())).size;
+
+    // Revenue by course
+    const revenueByCourse = {};
+    const salesByMonth = {};
+
+    purchases.forEach(purchase => {
+      const courseTitle = purchase.courseId.courseTitle;
+      const month = new Date(purchase.createdAt).toISOString().slice(0, 7); // YYYY-MM
+
+      revenueByCourse[courseTitle] = (revenueByCourse[courseTitle] || 0) + purchase.amount;
+      salesByMonth[month] = (salesByMonth[month] || 0) + purchase.amount;
+    });
+
+    // Recent sales (last 10)
+    const recentSales = purchases
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 10)
+      .map(purchase => ({
+        courseName: purchase.courseId.courseTitle,
+        studentName: purchase.userId.name,
+        amount: purchase.amount,
+        date: purchase.createdAt
+      }));
+
+    return res.status(200).json({
+      success: true,
+      stats: {
+        totalRevenue,
+        totalSales,
+        totalStudents,
+        totalCourses: instructorCourses.length,
+        revenueByCourse,
+        salesByMonth,
+        recentSales
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching instructor stats:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch instructor stats"
+    });
   }
 };

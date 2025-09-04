@@ -418,6 +418,184 @@ export const testPaymentFlow = async (courseId = '6821d01bc88ae75d238fe6ac') => 
   }
 };
 
+// Test complete LMS flow after purchase
+export const testLMSFlow = async () => {
+  console.log('🎓 Testing Complete LMS Flow...');
+
+  try {
+    // Test 1: Check purchased courses for student
+    console.log('1. Testing student purchased courses...');
+    const purchasedResponse = await fetch('http://localhost:8080/api/v1/purchase/', {
+      credentials: 'include'
+    });
+    const purchasedData = await purchasedResponse.json();
+
+    if (purchasedData.success) {
+      console.log('✅ Student purchased courses:', purchasedData.purchasedCourses.length);
+      purchasedData.purchasedCourses.forEach(purchase => {
+        console.log(`  - ${purchase.courseId.courseTitle} (₹${purchase.amount})`);
+      });
+    } else {
+      console.log('❌ Failed to fetch purchased courses');
+    }
+
+    // Test 2: Check instructor stats
+    console.log('2. Testing instructor stats...');
+    const statsResponse = await fetch('http://localhost:8080/api/v1/purchase/instructor/stats', {
+      credentials: 'include'
+    });
+    const statsData = await statsResponse.json();
+
+    if (statsData.success) {
+      console.log('✅ Instructor stats:', {
+        totalRevenue: `₹${statsData.stats.totalRevenue}`,
+        totalSales: statsData.stats.totalSales,
+        totalStudents: statsData.stats.totalStudents,
+        totalCourses: statsData.stats.totalCourses
+      });
+
+      if (statsData.stats.recentSales.length > 0) {
+        console.log('Recent sales:');
+        statsData.stats.recentSales.forEach(sale => {
+          console.log(`  - ${sale.courseName}: ₹${sale.amount} by ${sale.studentName}`);
+        });
+      }
+    } else {
+      console.log('❌ Failed to fetch instructor stats');
+    }
+
+    // Test 3: Check user profile for enrolled courses
+    console.log('3. Testing user profile...');
+    const profileResponse = await fetch('http://localhost:8080/api/v1/user/profile', {
+      credentials: 'include'
+    });
+    const profileData = await profileResponse.json();
+
+    if (profileData.success) {
+      console.log('✅ User enrolled courses:', profileData.user.enrolledCourses?.length || 0);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('❌ LMS flow test failed:', error);
+    return false;
+  }
+};
+
+// Debug My Learning data
+export const debugMyLearning = async () => {
+  console.log('🔍 Debugging My Learning Data...');
+
+  try {
+    // Test 1: Check user profile and enrolled courses
+    console.log('1. Checking user profile...');
+    const profileResponse = await fetch('http://localhost:8080/api/v1/user/profile', {
+      credentials: 'include'
+    });
+    const profileData = await profileResponse.json();
+
+    if (profileData.success) {
+      console.log('✅ User Profile:', {
+        name: profileData.user.name,
+        email: profileData.user.email,
+        enrolledCourses: profileData.user.enrolledCourses?.length || 0,
+        enrolledCoursesData: profileData.user.enrolledCourses
+      });
+    } else {
+      console.log('❌ Failed to fetch user profile:', profileData.message);
+      return false;
+    }
+
+    // Test 2: Check purchased courses
+    console.log('2. Checking purchased courses...');
+    const purchasedResponse = await fetch('http://localhost:8080/api/v1/purchase/', {
+      credentials: 'include'
+    });
+    const purchasedData = await purchasedResponse.json();
+
+    if (purchasedData.success) {
+      console.log('✅ Purchased Courses:', {
+        count: purchasedData.purchasedCourses?.length || 0,
+        courses: purchasedData.purchasedCourses?.map(p => ({
+          courseTitle: p.courseId?.courseTitle,
+          amount: p.amount,
+          status: p.status,
+          purchaseDate: p.createdAt
+        }))
+      });
+    } else {
+      console.log('❌ Failed to fetch purchased courses:', purchasedData.message);
+    }
+
+    // Test 3: Check if there are any course purchases in database
+    console.log('3. Checking all course purchases...');
+    const allPurchasesResponse = await fetch('http://localhost:8080/api/v1/purchase/instructor/stats', {
+      credentials: 'include'
+    });
+    const statsData = await allPurchasesResponse.json();
+
+    if (statsData.success) {
+      console.log('✅ Purchase Stats:', {
+        totalSales: statsData.stats.totalSales,
+        recentSales: statsData.stats.recentSales?.length || 0
+      });
+    }
+
+    return true;
+  } catch (error) {
+    console.error('❌ Debug failed:', error);
+    return false;
+  }
+};
+
+// Simulate course enrollment for testing
+export const simulateEnrollment = async (courseId = '6821d01bc88ae75d238fe6ac') => {
+  console.log('🎓 Simulating Course Enrollment...');
+
+  try {
+    // Get user profile first
+    const profileResponse = await fetch('http://localhost:8080/api/v1/user/profile', {
+      credentials: 'include'
+    });
+    const profileData = await profileResponse.json();
+
+    if (!profileData.success) {
+      console.log('❌ User not logged in');
+      return false;
+    }
+
+    console.log('User before enrollment:', profileData.user.name);
+
+    // Use the new enrollment endpoint
+    const enrollResponse = await fetch('http://localhost:8080/api/v1/user/enroll', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        courseId: courseId
+      })
+    });
+
+    const enrollData = await enrollResponse.json();
+
+    if (enrollData.success) {
+      console.log('✅ Course enrollment simulated successfully');
+      console.log('Enrolled courses:', enrollData.user.enrolledCourses?.length || 0);
+      console.log('Now refresh the My Learning page to see the course');
+      return true;
+    } else {
+      console.log('❌ Failed to simulate enrollment:', enrollData.message);
+      return false;
+    }
+
+  } catch (error) {
+    console.error('❌ Simulation failed:', error);
+    return false;
+  }
+};
+
 // Export for use in browser console
 window.quickTest = {
   testApiConnectivity,
@@ -428,6 +606,9 @@ window.quickTest = {
   testSearchFunctionality,
   testStudentRegistration,
   testPaymentFlow,
+  testLMSFlow,
+  debugMyLearning,
+  simulateEnrollment,
   quickFix
 };
 
@@ -440,5 +621,8 @@ export default {
   testSearchFunctionality,
   testStudentRegistration,
   testPaymentFlow,
+  testLMSFlow,
+  debugMyLearning,
+  simulateEnrollment,
   quickFix
 };

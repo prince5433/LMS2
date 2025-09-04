@@ -1,6 +1,6 @@
 import express from "express";
 import isAuthenticated from "../middlewares/isAuthenticated.js";
-import { createCheckoutSession, getAllPurchasedCourse, getCourseDetailWithPurchaseStatus, stripeWebhook } from "../controllers/coursePurchase.controller.js";
+import { createCheckoutSession, getAllPurchasedCourse, getCourseDetailWithPurchaseStatus, stripeWebhook, getInstructorStats } from "../controllers/coursePurchase.controller.js";
 
 const router = express.Router();
 
@@ -9,5 +9,6 @@ router.route("/webhook").post(express.raw({type:"application/json"}), stripeWebh
 router.route("/course/:courseId/detail-with-status").get(isAuthenticated,getCourseDetailWithPurchaseStatus);
 
 router.route("/").get(isAuthenticated,getAllPurchasedCourse);
+router.route("/instructor/stats").get(isAuthenticated, getInstructorStats);
 
 export default router;
