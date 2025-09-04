@@ -1,0 +1,51 @@
+services:
+  # Backend Service
+  - type: web
+    name: lms-backend
+    env: node
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: WEBHOOK_ENDPOINT_SECRET
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        value: https://lms-2.vercel.app
+
+  # Frontend Service (Static Site)
+  - type: static
+    name: lms-frontend
+    buildCommand: cd client && npm install && npm run build
+    staticPublishPath: ./client/dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: lms-backend
+          property: host
+      - key: VITE_USER_API
+        value: /api/v1/user/
+      - key: VITE_COURSE_API
+        value: /api/v1/course/
+      - key: VITE_PURCHASE_API
+        value: /api/v1/purchase/
+      - key: VITE_MEDIA_API
+        value: /api/v1/media/
+      - key: VITE_PROGRESS_API
+        value: /api/v1/progress/
