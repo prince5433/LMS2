@@ -183,8 +183,8 @@ const Navbar = () => {
               {/* Future: Add dynamic notifications here */}
 
               {/* User Menu */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={user?.photoUrl || "https://github.com/shadcn.png"} alt={user?.name} />
@@ -193,59 +193,60 @@ const Navbar = () => {
                       </AvatarFallback>
                     </Avatar>
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-64 bg-background/95 backdrop-blur-md border border-border/50 shadow-xl"
-                  align="end"
-                  sideOffset={5}
-                >
-                  <div className="p-3 border-b border-border/50">
-                    <p className="font-medium text-sm">{user?.name || "User"}</p>
-                    <p className="text-xs text-muted-foreground">{user?.email}</p>
-                  </div>
+                </DropdownMenu.Trigger>
 
-                  <DropdownMenuGroup className="p-1">
-                    <DropdownMenuItem className="flex items-center gap-2 p-2 cursor-pointer">
-                      <User size={16} />
+                <DropdownMenu.Portal>
+                  <DropdownMenu.Content
+                    className="z-50 min-w-[12rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+                    align="end"
+                    sideOffset={5}
+                  >
+                    <div className="px-2 py-1.5 text-sm font-semibold">
+                      <p>{user?.name || "User"}</p>
+                      <p className="text-xs text-muted-foreground">{user?.email}</p>
+                    </div>
+
+                    <DropdownMenu.Separator className="h-px bg-border my-1" />
+
+                    <DropdownMenu.Item className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground">
+                      <User size={16} className="mr-2" />
                       <Link to="/profile" className="flex-1">Profile</Link>
-                    </DropdownMenuItem>
+                    </DropdownMenu.Item>
 
                     {/* Student-specific options - Only show for students */}
                     {user && user.role === "student" && (
-                      <DropdownMenuItem className="flex items-center gap-2 p-2 cursor-pointer">
-                        <BookOpen size={16} />
+                      <DropdownMenu.Item className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground">
+                        <BookOpen size={16} className="mr-2" />
                         <Link to="/my-learning" className="flex-1">My Learning</Link>
-                      </DropdownMenuItem>
+                      </DropdownMenu.Item>
                     )}
 
-                    <DropdownMenuItem className="flex items-center gap-2 p-2 cursor-pointer">
-                      <Settings size={16} />
+                    <DropdownMenu.Item className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground">
+                      <Settings size={16} className="mr-2" />
                       <span>Settings</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
+                    </DropdownMenu.Item>
 
-                  {user?.role === "instructor" && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuGroup className="p-1">
-                        <DropdownMenuItem className="flex items-center gap-2 p-2 cursor-pointer">
-                          <GraduationCap size={16} />
+                    {user?.role === "instructor" && (
+                      <>
+                        <DropdownMenu.Separator className="h-px bg-border my-1" />
+                        <DropdownMenu.Item className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground">
+                          <GraduationCap size={16} className="mr-2" />
                           <Link to="/admin/dashboard" className="flex-1">Instructor Dashboard</Link>
-                        </DropdownMenuItem>
-                      </DropdownMenuGroup>
-                    </>
-                  )}
+                        </DropdownMenu.Item>
+                      </>
+                    )}
 
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="flex items-center gap-2 p-2 cursor-pointer text-red-600 focus:text-red-600"
-                    onClick={logoutHandler}
-                  >
-                    <LogOut size={16} />
-                    <span>Log out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <DropdownMenu.Separator className="h-px bg-border my-1" />
+                    <DropdownMenu.Item
+                      className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground text-red-600"
+                      onClick={logoutHandler}
+                    >
+                      <LogOut size={16} className="mr-2" />
+                      <span>Log out</span>
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Content>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Root>
             </>
           ) : (
             <div className="flex items-center gap-3">
