@@ -596,6 +596,508 @@ export const simulateEnrollment = async (courseId = '6821d01bc88ae75d238fe6ac') 
   }
 };
 
+// Complete purchase manually for testing
+export const completePurchase = async (courseId = '6821d01bc88ae75d238fe6ac') => {
+  console.log('💳 Completing Purchase Manually...');
+
+  try {
+    // Get user profile first
+    const profileResponse = await fetch('http://localhost:8080/api/v1/user/profile', {
+      credentials: 'include'
+    });
+    const profileData = await profileResponse.json();
+
+    if (!profileData.success) {
+      console.log('❌ User not logged in');
+      return false;
+    }
+
+    console.log('User:', profileData.user.name);
+
+    // Complete purchase manually
+    const purchaseResponse = await fetch('http://localhost:8080/api/v1/purchase/complete-manually', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        courseId: courseId
+      })
+    });
+
+    const purchaseData = await purchaseResponse.json();
+
+    if (purchaseData.success) {
+      console.log('✅ Purchase completed successfully!');
+      console.log('Purchase details:', purchaseData.purchase);
+      console.log('🎓 Course should now appear in My Learning');
+      console.log('💡 Refresh the My Learning page to see the course');
+      return true;
+    } else {
+      console.log('❌ Failed to complete purchase:', purchaseData.message);
+      return false;
+    }
+
+  } catch (error) {
+    console.error('❌ Purchase completion failed:', error);
+    return false;
+  }
+};
+
+// Comprehensive instructor functionality test
+export const testInstructorFunctionality = async () => {
+  console.log('🎓 Testing All Instructor Functionalities...');
+
+  try {
+    // Test 1: Check user role
+    console.log('1. Checking user role...');
+    const profileResponse = await fetch('http://localhost:8080/api/v1/user/profile', {
+      credentials: 'include'
+    });
+    const profileData = await profileResponse.json();
+
+    if (!profileData.success) {
+      console.log('❌ User not logged in');
+      return false;
+    }
+
+    const user = profileData.user;
+    console.log('✅ User:', user.name, '| Role:', user.role);
+
+    if (user.role !== 'instructor') {
+      console.log('❌ User is not an instructor. Current role:', user.role);
+      return false;
+    }
+
+    // Test 2: Check instructor courses
+    console.log('2. Checking instructor courses...');
+    const coursesResponse = await fetch('http://localhost:8080/api/v1/course/', {
+      credentials: 'include'
+    });
+    const coursesData = await coursesResponse.json();
+
+    if (coursesData.success) {
+      console.log('✅ Instructor Courses:', {
+        count: coursesData.courses?.length || 0,
+        courses: coursesData.courses?.map(c => ({
+          id: c._id,
+          title: c.courseTitle,
+          category: c.category,
+          price: c.coursePrice,
+          published: c.isPublished,
+          lectures: c.lectures?.length || 0
+        }))
+      });
+    } else {
+      console.log('❌ Failed to fetch courses:', coursesData.message);
+    }
+
+    // Test 3: Check instructor earnings
+    console.log('3. Checking instructor earnings...');
+    const statsResponse = await fetch('http://localhost:8080/api/v1/purchase/instructor/stats', {
+      credentials: 'include'
+    });
+    const statsData = await statsResponse.json();
+
+    if (statsData.success) {
+      console.log('✅ Instructor Stats:', {
+        totalSales: statsData.stats.totalSales,
+        totalRevenue: statsData.stats.totalRevenue,
+        totalStudents: statsData.stats.totalStudents,
+        recentSales: statsData.stats.recentSales?.length || 0
+      });
+    } else {
+      console.log('❌ Failed to fetch stats:', statsData.message);
+    }
+
+    // Test 4: Test course creation
+    console.log('4. Testing course creation...');
+    const testCourseData = {
+      courseTitle: `Test Course ${Date.now()}`,
+      category: 'Web Development'
+    };
+
+    const createResponse = await fetch('http://localhost:8080/api/v1/course/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(testCourseData)
+    });
+
+    const createData = await createResponse.json();
+
+    if (createData.success) {
+      console.log('✅ Course creation successful:', createData.course.courseTitle);
+
+      // Test 5: Test lecture creation for the new course
+      console.log('5. Testing lecture creation...');
+      const testLectureData = {
+        lectureTitle: 'Test Lecture',
+        description: 'This is a test lecture',
+        isPreviewFree: true,
+        duration: '10:00'
+      };
+
+      const lectureResponse = await fetch(`http://localhost:8080/api/v1/course/${createData.course._id}/lecture`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(testLectureData)
+      });
+
+      const lectureData = await lectureResponse.json();
+
+      if (lectureData.success) {
+        console.log('✅ Lecture creation successful:', lectureData.lecture.lectureTitle);
+      } else {
+        console.log('❌ Lecture creation failed:', lectureData.message);
+      }
+
+    } else {
+      console.log('❌ Course creation failed:', createData.message);
+    }
+
+    console.log('🎉 Instructor functionality test completed!');
+    return true;
+
+  } catch (error) {
+    console.error('❌ Instructor test failed:', error);
+    return false;
+  }
+};
+
+// Test lecture creation authorization
+export const testLectureCreation = async (courseId = '68b978329300249073620901') => {
+  console.log('🎬 Testing Lecture Creation Authorization...');
+
+  try {
+    // Test 1: Check user authentication
+    console.log('1. Checking user authentication...');
+    const profileResponse = await fetch('http://localhost:8080/api/v1/user/profile', {
+      credentials: 'include'
+    });
+    const profileData = await profileResponse.json();
+
+    if (!profileData.success) {
+      console.log('❌ User not logged in');
+      return false;
+    }
+
+    console.log('✅ User authenticated:', profileData.user.name);
+
+    // Test 2: Check course ownership
+    console.log('2. Checking course ownership...');
+    const courseResponse = await fetch(`http://localhost:8080/api/v1/course/${courseId}`, {
+      credentials: 'include'
+    });
+    const courseData = await courseResponse.json();
+
+    if (!courseData.success) {
+      console.log('❌ Failed to fetch course:', courseData.message);
+      return false;
+    }
+
+    console.log('✅ Course found:', courseData.course.courseTitle);
+    console.log('Course creator:', courseData.course.creator);
+    console.log('Current user:', profileData.user._id);
+
+    // Test 3: Test lecture creation
+    console.log('3. Testing lecture creation...');
+    const testLectureData = {
+      lectureTitle: `Test Lecture ${Date.now()}`,
+      description: 'This is a test lecture for authorization testing',
+      isPreviewFree: true,
+      duration: '5:00'
+    };
+
+    const lectureResponse = await fetch(`http://localhost:8080/api/v1/course/${courseId}/lecture`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(testLectureData)
+    });
+
+    const lectureData = await lectureResponse.json();
+
+    if (lectureData.success) {
+      console.log('✅ Lecture creation successful!');
+      console.log('Lecture:', lectureData.lecture.lectureTitle);
+      return true;
+    } else {
+      console.log('❌ Lecture creation failed:', lectureData.message);
+      if (lectureData.debug) {
+        console.log('Debug info:', lectureData.debug);
+      }
+      return false;
+    }
+
+  } catch (error) {
+    console.error('❌ Lecture creation test failed:', error);
+    return false;
+  }
+};
+
+// Test complete course visibility and purchase flow
+export const testCourseVisibilityFlow = async () => {
+  console.log('🔄 Testing Complete Course Visibility & Purchase Flow...');
+
+  try {
+    // Test 1: Check published courses visibility
+    console.log('1. Checking published courses...');
+    const publishedResponse = await fetch('http://localhost:8080/api/v1/course/published-courses', {
+      credentials: 'include'
+    });
+    const publishedData = await publishedResponse.json();
+
+    if (publishedData.success) {
+      console.log('✅ Published Courses:', {
+        count: publishedData.courses?.length || 0,
+        courses: publishedData.courses?.map(c => ({
+          id: c._id,
+          title: c.courseTitle,
+          creator: c.creator?.name,
+          price: c.coursePrice
+        }))
+      });
+    } else {
+      console.log('❌ No published courses found');
+    }
+
+    // Test 2: Check user authentication and role
+    console.log('2. Checking current user...');
+    const profileResponse = await fetch('http://localhost:8080/api/v1/user/profile', {
+      credentials: 'include'
+    });
+    const profileData = await profileResponse.json();
+
+    if (!profileData.success) {
+      console.log('❌ User not logged in');
+      return false;
+    }
+
+    console.log('✅ Current User:', {
+      name: profileData.user.name,
+      role: profileData.user.role,
+      enrolledCourses: profileData.user.enrolledCourses?.length || 0
+    });
+
+    // Test 3: If instructor, check their courses and publish status
+    if (profileData.user.role === 'instructor') {
+      console.log('3. Checking instructor courses...');
+      const coursesResponse = await fetch('http://localhost:8080/api/v1/course/', {
+        credentials: 'include'
+      });
+      const coursesData = await coursesResponse.json();
+
+      if (coursesData.success) {
+        console.log('✅ Instructor Courses:', {
+          total: coursesData.courses?.length || 0,
+          published: coursesData.courses?.filter(c => c.isPublished).length || 0,
+          unpublished: coursesData.courses?.filter(c => !c.isPublished).length || 0,
+          courses: coursesData.courses?.map(c => ({
+            id: c._id,
+            title: c.courseTitle,
+            published: c.isPublished,
+            lectures: c.lectures?.length || 0,
+            students: c.enrolledStudents?.length || 0
+          }))
+        });
+
+        // Test publishing a course if there are unpublished ones
+        const unpublishedCourse = coursesData.courses?.find(c => !c.isPublished && c.lectures?.length > 0);
+        if (unpublishedCourse) {
+          console.log('4. Testing course publishing...');
+          const publishResponse = await fetch(`http://localhost:8080/api/v1/course/${unpublishedCourse._id}?publish=true`, {
+            method: 'PATCH',
+            credentials: 'include'
+          });
+          const publishData = await publishResponse.json();
+
+          if (publishData.success) {
+            console.log('✅ Course published successfully:', unpublishedCourse.courseTitle);
+          } else {
+            console.log('❌ Failed to publish course:', publishData.message);
+          }
+        }
+      }
+    }
+
+    // Test 4: If student, test course purchase flow
+    if (profileData.user.role === 'student' && publishedData.courses?.length > 0) {
+      console.log('4. Testing student purchase flow...');
+      const testCourse = publishedData.courses[0];
+
+      // Test manual purchase completion
+      const purchaseResponse = await fetch('http://localhost:8080/api/v1/purchase/complete-manually', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          courseId: testCourse._id
+        })
+      });
+
+      const purchaseData = await purchaseResponse.json();
+
+      if (purchaseData.success) {
+        console.log('✅ Course purchase completed:', testCourse.courseTitle);
+
+        // Check if course appears in My Learning
+        console.log('5. Verifying course in My Learning...');
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait a bit for data to update
+
+        const updatedProfileResponse = await fetch('http://localhost:8080/api/v1/user/profile', {
+          credentials: 'include'
+        });
+        const updatedProfileData = await updatedProfileResponse.json();
+
+        if (updatedProfileData.success) {
+          const enrolledCourses = updatedProfileData.user.enrolledCourses || [];
+          const isEnrolled = enrolledCourses.some(course => course._id === testCourse._id);
+
+          if (isEnrolled) {
+            console.log('✅ Course successfully added to My Learning!');
+          } else {
+            console.log('❌ Course not found in My Learning');
+          }
+        }
+      } else {
+        console.log('❌ Failed to complete purchase:', purchaseData.message);
+      }
+    }
+
+    console.log('🎉 Course visibility and purchase flow test completed!');
+    return true;
+
+  } catch (error) {
+    console.error('❌ Course flow test failed:', error);
+    return false;
+  }
+};
+
+// Fix course prices and test purchase flow
+export const fixCoursePricesAndTestPurchase = async () => {
+  console.log('💰 Fixing Course Prices & Testing Purchase Flow...');
+
+  try {
+    // Test 1: Check current user
+    console.log('1. Checking current user...');
+    const profileResponse = await fetch('http://localhost:8080/api/v1/user/profile', {
+      credentials: 'include'
+    });
+    const profileData = await profileResponse.json();
+
+    if (!profileData.success) {
+      console.log('❌ User not logged in');
+      return false;
+    }
+
+    console.log('✅ Current User:', profileData.user.name, '| Role:', profileData.user.role);
+
+    // Test 2: Check published courses and their prices
+    console.log('2. Checking published courses and prices...');
+    const publishedResponse = await fetch('http://localhost:8080/api/v1/course/published-courses', {
+      credentials: 'include'
+    });
+    const publishedData = await publishedResponse.json();
+
+    if (publishedData.success && publishedData.courses?.length > 0) {
+      console.log('✅ Published Courses Found:', publishedData.courses.length);
+
+      for (const course of publishedData.courses) {
+        console.log(`Course: ${course.courseTitle}`);
+        console.log(`  Price: ${course.coursePrice} (Type: ${typeof course.coursePrice})`);
+        console.log(`  Valid Price: ${!isNaN(course.coursePrice) && course.coursePrice > 0}`);
+
+        // If price is invalid and user is instructor, try to fix it
+        if (profileData.user.role === 'instructor' &&
+            course.creator._id === profileData.user._id &&
+            (!course.coursePrice || isNaN(course.coursePrice) || course.coursePrice <= 0)) {
+
+          console.log(`  🔧 Fixing price for course: ${course.courseTitle}`);
+
+          const fixPriceResponse = await fetch(`http://localhost:8080/api/v1/course/${course._id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              coursePrice: 999 // Set a default price of ₹999
+            })
+          });
+
+          const fixPriceData = await fixPriceResponse.json();
+
+          if (fixPriceData.success) {
+            console.log(`  ✅ Price fixed: ₹999`);
+          } else {
+            console.log(`  ❌ Failed to fix price:`, fixPriceData.message);
+          }
+        }
+      }
+
+      // Test 3: Test purchase flow with a valid course
+      if (profileData.user.role === 'student') {
+        console.log('3. Testing purchase flow as student...');
+
+        // Find a course with valid price
+        const validCourse = publishedData.courses.find(course =>
+          course.coursePrice && !isNaN(course.coursePrice) && course.coursePrice > 0
+        );
+
+        if (validCourse) {
+          console.log(`Testing purchase for: ${validCourse.courseTitle} (₹${validCourse.coursePrice})`);
+
+          // Test checkout session creation
+          const checkoutResponse = await fetch('http://localhost:8080/api/v1/purchase/checkout/create-checkout-session', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              courseId: validCourse._id
+            })
+          });
+
+          const checkoutData = await checkoutResponse.json();
+
+          if (checkoutData.success) {
+            console.log('✅ Checkout session created successfully!');
+            console.log('Checkout URL:', checkoutData.url);
+            console.log('💡 You can now proceed with payment');
+          } else {
+            console.log('❌ Checkout session failed:', checkoutData.message);
+            console.log('Error details:', checkoutData.error);
+          }
+        } else {
+          console.log('❌ No courses with valid prices found');
+        }
+      }
+
+    } else {
+      console.log('❌ No published courses found');
+    }
+
+    console.log('🎉 Course price fix and purchase test completed!');
+    return true;
+
+  } catch (error) {
+    console.error('❌ Course price fix test failed:', error);
+    return false;
+  }
+};
+
 // Export for use in browser console
 window.quickTest = {
   testApiConnectivity,
@@ -609,6 +1111,11 @@ window.quickTest = {
   testLMSFlow,
   debugMyLearning,
   simulateEnrollment,
+  completePurchase,
+  testInstructorFunctionality,
+  testLectureCreation,
+  testCourseVisibilityFlow,
+  fixCoursePricesAndTestPurchase,
   quickFix
 };
 
@@ -624,5 +1131,10 @@ export default {
   testLMSFlow,
   debugMyLearning,
   simulateEnrollment,
+  completePurchase,
+  testInstructorFunctionality,
+  testLectureCreation,
+  testCourseVisibilityFlow,
+  fixCoursePricesAndTestPurchase,
   quickFix
 };

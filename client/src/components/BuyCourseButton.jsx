@@ -34,6 +34,21 @@ const BuyCourseButton = ({ courseId }) => {
     }
   }, [isSuccess, data, isError, error]);
 
+  // Listen for successful payment completion (when user returns from Stripe)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentSuccess = urlParams.get('payment_success');
+
+    if (paymentSuccess === 'true') {
+      toast.success("🎉 Course purchased successfully! Check your My Learning page.", {
+        duration: 5000,
+        id: "purchase-success"
+      });
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   return (
     <div className="space-y-3">
       <Button

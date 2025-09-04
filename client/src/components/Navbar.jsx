@@ -183,13 +183,8 @@ const Navbar = () => {
         <div className="flex items-center gap-3">
           {user ? (
             <>
-              {/* Notifications */}
-              <Button size="icon" variant="ghost" className="relative">
-                <Bell size={18} />
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs bg-red-500">
-                  3
-                </Badge>
-              </Button>
+              {/* Notifications - Removed static notification for now */}
+              {/* Future: Add dynamic notifications here */}
 
               {/* User Menu */}
               <DropdownMenu>

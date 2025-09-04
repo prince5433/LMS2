@@ -69,6 +69,14 @@ export const editCourse = async (req, res) => {
                 message: "Course not found"
             })
         }
+
+        // Check if user is the course creator
+        if (course.creator.toString() !== req.id) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not authorized to edit this course."
+            });
+        }
         let courseThumbnail;
         if(thumbnail){
             if(course.courseThumbnail){
@@ -121,27 +129,27 @@ export const getCourseById = async (req, res) => {
 
 export const createLecture = async (req, res) => {
     try {
-      const { lectureTitle } = req.body;
+      const { lectureTitle, description, isPreviewFree, duration, videoUrl } = req.body;
       const courseId = req.params.courseId;
-  
+
       console.log("Request body:", req.body);
       console.log("Course ID:", courseId);
-  
+
       if (!lectureTitle) {
         return res.status(400).json({
           success: false,
           message: "Lecture title is required."
         });
       }
-  
+
       if (!courseId) {
         return res.status(400).json({
           success: false,
           message: "Course ID is required."
         });
       }
-  
-      // Find the course
+
+      // Find the course and verify ownership
       const course = await Course.findById(courseId);
       if (!course) {
         return res.status(404).json({
@@ -149,11 +157,27 @@ export const createLecture = async (req, res) => {
           message: "Course not found."
         });
       }
-  
-      // Create a new lecture
+
+      // Check if user is the course creator
+      if (course.creator.toString() !== req.id) {
+        console.log("Authorization failed:");
+        console.log("Course creator:", course.creator.toString());
+        console.log("Request user ID:", req.id);
+        return res.status(403).json({
+          success: false,
+          message: "You are not authorized to add lectures to this course."
+        });
+      }
+
+      console.log("✅ Authorization successful - User can create lecture");
+
+      // Create a new lecture with all fields
       const lecture = await Lecture.create({
         lectureTitle,
-        isPreviewFree: false
+        description: description || "",
+        isPreviewFree: isPreviewFree || false,
+        duration: duration || "",
+        videoUrl: videoUrl || ""
       });
   
       // Add the lecture to the course
@@ -316,3 +340,54 @@ export const getPublishedCourseById = async (req, res) => {
         });
     }
 }
+
+// Publish or unpublish a course
+export const publishCourse = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const { publish } = req.query; // Get publish status from query parameter
+
+        // Find the course and verify ownership
+        const course = await Course.findById(courseId);
+        if (!course) {
+            return res.status(404).json({
+                success: false,
+                message: "Course not found"
+            });
+        }
+
+        // Check if user is the course creator
+        if (course.creator.toString() !== req.id) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not authorized to publish this course"
+            });
+        }
+
+        // Check if course has lectures before publishing
+        if (publish === 'true' && course.lectures.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Cannot publish course without lectures"
+            });
+        }
+
+        // Update the publish status
+        const isPublished = publish === 'true';
+        course.isPublished = isPublished;
+        await course.save();
+
+        return res.status(200).json({
+            success: true,
+            message: `Course ${isPublished ? 'published' : 'unpublished'} successfully`,
+            course
+        });
+
+    } catch (error) {
+        console.error("Publish course error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to update course publish status"
+        });
+    }
+};

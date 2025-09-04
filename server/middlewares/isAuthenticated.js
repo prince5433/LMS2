@@ -53,7 +53,7 @@ const isAuthenticated = async (req, res, next) => {
 
         // 4) Grant access to protected route
         req.user = currentUser;
-        req.id = currentUser._id;
+        req.id = currentUser._id.toString(); // Convert ObjectId to string
         next();
     } catch (error) {
         console.error('Authentication error:', error);

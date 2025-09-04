@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { useGetPurchasedCoursesQuery } from "@/features/api/purchaseApi";
 import { useGetCreatorCoursesQuery } from "@/features/api/courseApi";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   LineChart,
   Line,
@@ -43,6 +44,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const { data: purchaseData, isLoading: purchaseLoading, isError: purchaseError } = useGetPurchasedCoursesQuery();
   const { data: coursesData, isLoading: coursesLoading } = useGetCreatorCoursesQuery();
 
@@ -320,7 +322,10 @@ const Dashboard = () => {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+        <Card
+          className="bg-gradient-to-r from-blue-500 to-blue-600 text-white cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => navigate('/admin/course/create')}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -332,24 +337,42 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+        <Card
+          className="bg-gradient-to-r from-green-500 to-green-600 text-white cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => navigate('/admin/course')}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold mb-2">View Analytics</h3>
-                <p className="text-green-100 text-sm">Detailed performance insights</p>
+                <h3 className="text-lg font-semibold mb-2">Manage Courses</h3>
+                <p className="text-green-100 text-sm">View and edit your courses</p>
               </div>
               <TrendingUp className="h-8 w-8" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+        <Card
+          className="bg-gradient-to-r from-purple-500 to-purple-600 text-white cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => {
+            // Show student statistics
+            const totalStudentsCount = courses.reduce((acc, course) => acc + (course.enrolledStudents?.length || 0), 0);
+            const totalCoursesCount = courses.length;
+            const avgStudentsPerCourse = totalCoursesCount > 0 ? (totalStudentsCount / totalCoursesCount).toFixed(1) : 0;
+
+            alert(`📊 Student Statistics:\n\n` +
+                  `Total Students: ${totalStudentsCount}\n` +
+                  `Total Courses: ${totalCoursesCount}\n` +
+                  `Average Students per Course: ${avgStudentsPerCourse}\n` +
+                  `Total Revenue: ₹${totalRevenue.toLocaleString()}\n\n` +
+                  `💡 Tip: Create more engaging content to attract more students!`);
+          }}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold mb-2">Student Feedback</h3>
-                <p className="text-purple-100 text-sm">Review course ratings</p>
+                <h3 className="text-lg font-semibold mb-2">Student Insights</h3>
+                <p className="text-purple-100 text-sm">View student statistics</p>
               </div>
               <Award className="h-8 w-8" />
             </div>
