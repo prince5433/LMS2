@@ -22,8 +22,22 @@ const InstructorDashboard = () => {
   const { user } = useSelector((store) => store.auth);
 
   // Fetch real course data and stats
-  const { data: coursesData, isLoading: coursesLoading, isError: coursesError } = useGetCreatorCoursesQuery();
+  const { data: coursesData, isLoading: coursesLoading, isError: coursesError, refetch: refetchCourses } = useGetCreatorCoursesQuery();
   const { data: statsData, isLoading: statsLoading, refetch: refetchStats } = useGetInstructorStatsQuery();
+
+  // Debug function
+  const debugAPI = async () => {
+    console.log("=== FRONTEND DEBUG ===");
+    console.log("User:", user);
+    console.log("Courses Data:", coursesData);
+    console.log("Courses Error:", coursesError);
+    console.log("Stats Data:", statsData);
+    console.log("=== END FRONTEND DEBUG ===");
+
+    // Refetch data
+    await refetchCourses();
+    await refetchStats();
+  };
 
   const courses = coursesData?.courses || [];
   const stats = {
@@ -95,12 +109,17 @@ const InstructorDashboard = () => {
               Welcome back, {user?.name}! Manage your courses and track your success
             </p>
           </div>
-          <Link to="/admin/course/create">
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Plus size={16} className="mr-2" />
-              Create New Course
+          <div className="flex gap-2">
+            <Button onClick={debugAPI} variant="outline" className="bg-orange-100 hover:bg-orange-200">
+              🐛 Debug API
             </Button>
-          </Link>
+            <Link to="/admin/course/create">
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Plus size={16} className="mr-2" />
+                Create New Course
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Stats Cards */}

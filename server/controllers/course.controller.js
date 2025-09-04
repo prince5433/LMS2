@@ -63,21 +63,41 @@ export const createCourse = async (req, res) => {
 export const getCreatorCourses = async (req, res) => {
     try {
         const userId = req.id; // Get the user ID from the request object
+
+        console.log("=== GET CREATOR COURSES DEBUG ===");
+        console.log("User ID from request:", userId);
+        console.log("Request headers:", req.headers);
+
         const courses = await Course.find({ creator: userId }); // Find all courses created by the user
+
+        console.log("Courses found:", courses.length);
+        console.log("Course details:", courses.map(c => ({
+            id: c._id,
+            title: c.courseTitle,
+            creator: c.creator,
+            isPublished: c.isPublished,
+            price: c.coursePrice
+        })));
+
         if (!courses || courses.length === 0) {
-            return res.status(404).json({
-                success: false,
+            console.log("No courses found for user:", userId);
+            return res.status(200).json({
+                success: true,
                 message: "No courses found for this user",
                 courses: []
             });
         }
+
+        console.log("Returning courses successfully");
+        console.log("=== END GET CREATOR COURSES DEBUG ===");
+
         return res.status(200).json({
             success: true,
             message: "Courses fetched successfully",
             courses
         });
     } catch (error) {
-        console.log(error);
+        console.error("Error in getCreatorCourses:", error);
         return res.status(500).json({
             success: false,
             message: "Failed to fetch courses"
