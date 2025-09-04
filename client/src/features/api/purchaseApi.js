@@ -55,6 +55,14 @@ export const purchaseApi = createApi({
                 method: 'GET',
             }),
         }),
+        createTestPurchase: builder.mutation({
+            query: ({ courseId, amount }) => ({
+                url: '/test-purchase',
+                method: 'POST',
+                body: { courseId, amount },
+            }),
+            invalidatesTags: ['PurchasedCourses', 'InstructorStats'],
+        }),
         debugPurchaseStatus: builder.query({
             query: (courseId) => ({
                 url: `/debug/${courseId}`,
@@ -71,5 +79,6 @@ export const {
     useGetPurchasedCoursesQuery,
     useGetInstructorStatsQuery,
     useCompletePurchaseManuallyMutation,
-    useDebugPurchaseStatusQuery
+    useDebugPurchaseStatusQuery,
+    useCreateTestPurchaseMutation
 } = purchaseApi;

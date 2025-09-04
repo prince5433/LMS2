@@ -312,9 +312,16 @@ export const getInstructorStats = async (req, res) => {
   try {
     const instructorId = req.id;
 
+    console.log("=== INSTRUCTOR STATS DEBUG ===");
+    console.log("Instructor ID:", instructorId);
+
     // Get all courses created by this instructor
     const instructorCourses = await Course.find({ creator: instructorId });
     const courseIds = instructorCourses.map(course => course._id);
+
+    console.log("Instructor courses found:", instructorCourses.length);
+    console.log("Course IDs:", courseIds);
+    console.log("Courses:", instructorCourses.map(c => ({ id: c._id, title: c.courseTitle, price: c.coursePrice })));
 
     // Get all completed purchases for instructor's courses
     const purchases = await CoursePurchase.find({
@@ -322,10 +329,23 @@ export const getInstructorStats = async (req, res) => {
       status: "completed"
     }).populate("courseId").populate("userId", "name email");
 
+    console.log("Completed purchases found:", purchases.length);
+    console.log("Purchase details:", purchases.map(p => ({
+      id: p._id,
+      courseId: p.courseId?._id,
+      courseTitle: p.courseId?.courseTitle,
+      amount: p.amount,
+      status: p.status,
+      studentName: p.userId?.name,
+      createdAt: p.createdAt
+    })));
+
     // Calculate stats
     const totalRevenue = purchases.reduce((sum, purchase) => sum + purchase.amount, 0);
     const totalSales = purchases.length;
     const totalStudents = new Set(purchases.map(p => p.userId._id.toString())).size;
+
+    console.log("Calculated stats:", { totalRevenue, totalSales, totalStudents });
 
     // Revenue by course
     const revenueByCourse = {};
@@ -350,17 +370,22 @@ export const getInstructorStats = async (req, res) => {
         date: purchase.createdAt
       }));
 
+    const finalStats = {
+      totalRevenue,
+      totalSales,
+      totalStudents,
+      totalCourses: instructorCourses.length,
+      revenueByCourse,
+      salesByMonth,
+      recentSales
+    };
+
+    console.log("Final stats being returned:", finalStats);
+    console.log("=== END INSTRUCTOR STATS DEBUG ===");
+
     return res.status(200).json({
       success: true,
-      stats: {
-        totalRevenue,
-        totalSales,
-        totalStudents,
-        totalCourses: instructorCourses.length,
-        revenueByCourse,
-        salesByMonth,
-        recentSales
-      }
+      stats: finalStats
     });
   } catch (error) {
     console.error("Error fetching instructor stats:", error);
@@ -538,6 +563,72 @@ export const debugPurchaseStatus = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to get debug info",
+      error: error.message
+    });
+  }
+};
+
+// Test endpoint to create a sample purchase for testing instructor revenue
+export const createTestPurchase = async (req, res) => {
+  try {
+    const { courseId, amount = 1000 } = req.body;
+    const userId = req.id;
+
+    console.log("Creating test purchase:", { userId, courseId, amount });
+
+    // Check if course exists
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found"
+      });
+    }
+
+    // Create a test purchase
+    const testPurchase = new CoursePurchase({
+      courseId,
+      userId,
+      amount: Number(amount),
+      status: "completed",
+      paymentId: `test_${Date.now()}`
+    });
+
+    await testPurchase.save();
+
+    // Update user's enrolledCourses
+    await User.findByIdAndUpdate(
+      userId,
+      { $addToSet: { enrolledCourses: courseId } },
+      { new: true }
+    );
+
+    // Update course to add user ID to enrolledStudents
+    await Course.findByIdAndUpdate(
+      courseId,
+      { $addToSet: { enrolledStudents: userId } },
+      { new: true }
+    );
+
+    console.log("Test purchase created successfully:", testPurchase._id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Test purchase created successfully",
+      purchase: {
+        id: testPurchase._id,
+        courseId: testPurchase.courseId,
+        userId: testPurchase.userId,
+        amount: testPurchase.amount,
+        status: testPurchase.status
+      }
+    });
+
+  } catch (error) {
+    console.error("Test purchase creation error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create test purchase",
       error: error.message
     });
   }
