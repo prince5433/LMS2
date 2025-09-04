@@ -57,4 +57,19 @@
     color: hsl(var(--foreground));
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   }
+
+  /* Fix for dropdown menu z-index */
+  [data-radix-popper-content-wrapper] {
+    z-index: 9999 !important;
+  }
+
+  /* Fix for sheet overlay */
+  [data-radix-dialog-overlay] {
+    z-index: 50 !important;
+  }
+
+  /* Ensure dropdown menus appear above everything */
+  [data-slot="dropdown-menu-content"] {
+    z-index: 9999 !important;
+  }
 }
