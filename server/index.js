@@ -55,6 +55,7 @@ const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
     'https://lms-2.vercel.app',
+    'https://lms-2-sigma.vercel.app',
     'https://lms-2-prince9369s-projects.vercel.app',
     'https://lms-2-git-main-prince9369s-projects.vercel.app',
     'https://your-custom-domain.com',
@@ -66,9 +67,21 @@ app.use(cors({
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
 
+        // Allow all localhost origins for development
+        if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+            return callback(null, true);
+        }
+
+        // Allow all Vercel deployment URLs
+        if (origin && origin.includes('vercel.app')) {
+            return callback(null, true);
+        }
+
+        // Allow specific origins or development mode
         if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
             callback(null, true);
         } else {
+            console.log('CORS blocked origin:', origin);
             callback(new Error('Not allowed by CORS'));
         }
     },
