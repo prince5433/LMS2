@@ -255,14 +255,24 @@ const Navbar = () => {
             </>
           ) : (
             <div className="flex items-center gap-3">
-              <Button variant="ghost" onClick={() => navigate("/login")}>
+              <Button variant="ghost" onClick={() => navigate("/login")} className="bg-blue-100">
                 Log in
               </Button>
-              <Button onClick={() => navigate("/login")} className="btn-primary">
+              <Button onClick={() => navigate("/login")} className="bg-green-500 text-white">
                 Sign up
               </Button>
             </div>
           )}
+
+          {/* EMERGENCY BACKUP BUTTONS - ALWAYS VISIBLE */}
+          <div className="flex items-center gap-2 ml-2">
+            <Button variant="outline" onClick={() => navigate("/login")} className="bg-red-100 text-xs">
+              🚨 Login
+            </Button>
+            <Button onClick={() => navigate("/login")} className="bg-red-500 text-white text-xs">
+              🚨 Signup
+            </Button>
+          </div>
 
           <DarkMode />
         </div>
