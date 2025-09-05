@@ -4,13 +4,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js",
     "dev": "nodemon index.js",
-    "build": "npm install"
-  },
-  "engines": {
-    "node": "18.x",
-    "npm": "9.x"
+    "start": "nodemon index.js"
   },
   "keywords": [],
   "author": "",
