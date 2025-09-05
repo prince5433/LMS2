@@ -66,7 +66,7 @@ const CreateLecture = () => {
             const formData = new FormData();
             formData.append('file', file);
 
-            const response = await fetch('http://localhost:8080/api/v1/media/upload-video', {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${import.meta.env.VITE_MEDIA_API}upload-video`, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'
