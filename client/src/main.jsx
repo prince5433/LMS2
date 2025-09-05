@@ -55,7 +55,22 @@ createRoot(document.getElementById('root')).render(
       <ErrorBoundary>
         <Custom>
           <App />
-          <Toaster />
+          <Toaster richColors theme="system" expand={true}
+            toastOptions={{
+              classNames: {
+                toast: 'bg-background text-foreground border border-border/60',
+                title: 'text-foreground',
+                description: 'text-foreground/80',
+                success: 'bg-green-600 text-white',
+                error: 'bg-red-600 text-white',
+                warning: 'bg-yellow-500 text-black',
+                info: 'bg-blue-600 text-white',
+                actionButton: 'text-primary-foreground',
+                cancelButton: 'text-foreground',
+                closeButton: 'text-foreground',
+              }
+            }}
+          />
         </Custom>
       </ErrorBoundary>
     </Provider>

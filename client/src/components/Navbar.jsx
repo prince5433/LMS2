@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { GraduationCap, Search, Bell, BookOpen, User, LogOut, Settings, Menu, BarChart3 } from 'lucide-react'
 
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuPortal } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -182,83 +182,83 @@ const Navbar = () => {
             {user ? `User: ${user.name}` : 'No User'}
           </div>
 
-          {user ? (
+          {true ? (
             <>
               {/* Notifications - Removed static notification for now */}
               {/* Future: Add dynamic notifications here */}
 
               {/* User Menu */}
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button type="button" variant="ghost" className="relative h-10 w-10 rounded-full bg-red-800">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={user?.photoUrl || "https://github.com/shadcn.png"} alt={user?.name} />
+                      <AvatarImage src={user?.photoUrl} alt={user?.name} />
                       <AvatarFallback className="bg-primary/10 text-primary">
                         {user?.name?.charAt(0) || "U"}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
-                </DropdownMenu.Trigger>
+                </DropdownMenuTrigger>
 
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content
-                    className="z-50 min-w-[12rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+                <DropdownMenuPortal>
+                  <DropdownMenuContent
+                    className="z-[9999] min-w-[12rem] overflow-hidden rounded-md border p-1 shadow-md bg-white text-black dark:bg-gray-900 dark:text-gray-100 border-border/50"
                     align="end"
-                    sideOffset={5}
+                    sideOffset={6}
                   >
                     <div className="px-2 py-1.5 text-sm font-semibold">
                       <p>{user?.name || "User"}</p>
                       <p className="text-xs text-muted-foreground">{user?.email}</p>
                     </div>
 
-                    <DropdownMenu.Separator className="h-px bg-border my-1" />
+                    <DropdownMenuSeparator className="h-px bg-border my-1" />
 
-                    <DropdownMenu.Item className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground">
+                    <DropdownMenuItem className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground">
                       <User size={16} className="mr-2" />
                       <Link to="/profile" className="flex-1">Profile</Link>
-                    </DropdownMenu.Item>
+                    </DropdownMenuItem>
 
                     {/* Student-specific options - Only show for students */}
                     {user && user.role === "student" && (
-                      <DropdownMenu.Item className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground">
+                      <DropdownMenuItem className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground">
                         <BookOpen size={16} className="mr-2" />
                         <Link to="/my-learning" className="flex-1">My Learning</Link>
-                      </DropdownMenu.Item>
+                      </DropdownMenuItem>
                     )}
 
-                    <DropdownMenu.Item className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground">
+                    <DropdownMenuItem className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground">
                       <Settings size={16} className="mr-2" />
                       <span>Settings</span>
-                    </DropdownMenu.Item>
+                    </DropdownMenuItem>
 
                     {user?.role === "instructor" && (
                       <>
-                        <DropdownMenu.Separator className="h-px bg-border my-1" />
-                        <DropdownMenu.Item className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground">
+                        <DropdownMenuSeparator className="h-px bg-border my-1" />
+                        <DropdownMenuItem className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground">
                           <GraduationCap size={16} className="mr-2" />
                           <Link to="/admin/dashboard" className="flex-1">Instructor Dashboard</Link>
-                        </DropdownMenu.Item>
+                        </DropdownMenuItem>
                       </>
                     )}
 
-                    <DropdownMenu.Separator className="h-px bg-border my-1" />
-                    <DropdownMenu.Item
+                    <DropdownMenuSeparator className="h-px bg-border my-1" />
+                    <DropdownMenuItem
                       className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground text-red-600"
                       onClick={logoutHandler}
                     >
                       <LogOut size={16} className="mr-2" />
                       <span>Log out</span>
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenuPortal>
+              </DropdownMenu>
             </>
           ) : (
             <div className="flex items-center gap-3">
               <Button variant="ghost" onClick={() => navigate("/login")} className="bg-blue-100">
                 Log in
               </Button>
-              <Button onClick={() => navigate("/login")} className="bg-green-500 text-white">
+              <Button onClick={() => navigate("/login")} className="btn-primary">
                 Sign up
               </Button>
             </div>
