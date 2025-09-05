@@ -103,6 +103,8 @@ const Navbar = () => {
   }
     , [isSuccess])
 
+  
+
   return (
     <div className="h-16 glass-effect border-b border-border/50 fixed top-0 left-0 right-0 duration-300 z-50 backdrop-blur-md">
       {/*Desktop*/}
@@ -264,12 +266,14 @@ const Navbar = () => {
             </div>
           )}
 
+
+
           {/* EMERGENCY BACKUP BUTTONS - ALWAYS VISIBLE */}
           <div className="flex items-center gap-2 ml-2">
             <Button variant="outline" onClick={() => navigate("/login")} className="bg-red-100 text-xs">
               🚨 Login
             </Button>
-            <Button onClick={() => navigate("/login")} className="bg-red-500 text-white text-xs">
+            <Button onClick={() => navigate("/signupl")} className="bg-red-500 text-white text-xs">
               🚨 Signup
             </Button>
           </div>
