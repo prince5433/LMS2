@@ -260,7 +260,7 @@ const Navbar = () => {
               <Button variant="ghost" onClick={() => navigate("/login")} className="bg-blue-100">
                 Log in
               </Button>
-              <Button onClick={() => navigate("/login")} className="btn-primary">
+              <Button onClick={() => navigate("/signup")} className="btn-primary">
                 Sign up
               </Button>
             </div>
@@ -273,7 +273,7 @@ const Navbar = () => {
             <Button variant="outline" onClick={() => navigate("/login")} className="bg-red-100 text-xs">
               🚨 Login
             </Button>
-            <Button onClick={() => navigate("/signupl")} className="bg-red-500 text-white text-xs">
+            <Button onClick={() => navigate("/signup")} className="bg-red-500 text-white text-xs">
               🚨 Signup
             </Button>
           </div>
@@ -422,7 +422,7 @@ const MobileNavbar = ({ user, logoutHandler }) => {
                   Log in
                 </Button>
                 <Button
-                  onClick={() => navigate("/login")}
+                  onClick={() => navigate("/signup")}
                   className="w-full btn-primary"
                 >
                   Sign up

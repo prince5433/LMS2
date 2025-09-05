@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import { Suspense } from 'react'
 import MainLayout from './layout/MainLayout'
 import { ProtectedRoute, AdminRoute } from './components/ProtectedRoutes'
@@ -28,6 +28,7 @@ const CheckUserRole = lazy(() => import('./pages/CheckUserRole'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Settings = lazy(() => import('./pages/Settings'))
 const ProductionChecklist = lazy(() => import('./components/ProductionChecklist'))
+const PaymentSuccess = lazy(() => import('./pages/PaymentSuccess'))
 // Import SearchPage normally to avoid dynamic import issues
 import SearchPage from './pages/student/SearchPageSimple'
 // Import AddCourse directly to avoid dynamic import issues
@@ -49,6 +50,10 @@ const appRouter = createBrowserRouter([
       {
         path: "login",
         element: <LoginWithLoading />
+      },
+      {
+        path: "signup",
+        element: <Navigate to="/login" replace />
       },
       {
         path: "dashboard",
@@ -87,6 +92,16 @@ const appRouter = createBrowserRouter([
             <PurchaseCourseProtectedRoute>
               <CourseProgressWithLoading />
             </PurchaseCourseProtectedRoute>
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: "payment-success/:courseId",
+        element: (
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingSkeleton />}>
+              <PaymentSuccess />
+            </Suspense>
           </ProtectedRoute>
         )
       },

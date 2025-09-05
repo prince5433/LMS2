@@ -50,13 +50,13 @@ const StudentDashboard = () => {
 
   // Get recent courses from purchased courses
   const recentCourses = purchasedCourses.slice(0, 3).map(course => ({
-    id: course.courseId || course._id,
+    id: course.courseId?._id || course.courseId || course._id,
     title: course.courseTitle || course.title,
     progress: course.progress || 0,
     instructor: course.creator?.name || course.instructorName || "Instructor",
     thumbnail: course.courseThumbnail || "/api/placeholder/300/200",
     lastAccessed: course.lastAccessed || "Recently",
-    courseId: course.courseId || course._id
+    courseId: course.courseId?._id || course.courseId || course._id
   }));
 
   // If no purchased courses, show some published courses as recommendations
