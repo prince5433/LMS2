@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useLoadUserQuery } from '@/features/api/authApi';
 import { useGetPurchasedCoursesQuery } from '@/features/api/purchaseApi';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,13 +26,35 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 
 function MyLearning() {
   const { data: userData, isLoading: userLoading, refetch: refetchUser } = useLoadUserQuery();
   const { data: purchasedData, isLoading: purchasedLoading, refetch: refetchPurchased } = useGetPurchasedCoursesQuery();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = React.useState("");
+
+  // Handle payment success
+  useEffect(() => {
+    const paymentSuccess = searchParams.get('payment_success');
+    const courseId = searchParams.get('courseId');
+
+    if (paymentSuccess === 'true') {
+      toast.success("🎉 Payment successful! Your course has been added to My Learning.", {
+        duration: 5000,
+        id: "payment-success"
+      });
+
+      // Clean up URL parameters
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+
+      // Refetch purchased courses to show the new course
+      refetchPurchased();
+    }
+  }, [searchParams, refetchPurchased]);
   const [filterStatus, setFilterStatus] = React.useState("all");
 
   const user = userData?.user;

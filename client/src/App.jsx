@@ -28,7 +28,7 @@ const CheckUserRole = lazy(() => import('./pages/CheckUserRole'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Settings = lazy(() => import('./pages/Settings'))
 const ProductionChecklist = lazy(() => import('./components/ProductionChecklist'))
-const PaymentSuccess = lazy(() => import('./pages/PaymentSuccess'))
+
 // Import SearchPage normally to avoid dynamic import issues
 import SearchPage from './pages/student/SearchPageSimple'
 // Import AddCourse directly to avoid dynamic import issues
@@ -95,16 +95,7 @@ const appRouter = createBrowserRouter([
           </ProtectedRoute>
         )
       },
-      {
-        path: "payment-success/:courseId",
-        element: (
-          <ProtectedRoute>
-            <Suspense fallback={<PageLoadingSkeleton />}>
-              <PaymentSuccess />
-            </Suspense>
-          </ProtectedRoute>
-        )
-      },
+
       {
         path: "course/search",
         element: <SearchPage />
