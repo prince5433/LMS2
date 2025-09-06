@@ -1,7 +1,16 @@
 import React, { useEffect, useState } from 'react'
 import { GraduationCap, Search, Bell, BookOpen, User, LogOut, Settings, Menu, BarChart3 } from 'lucide-react'
 
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuPortal } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  Separator,
+} from "@radix-ui/react-dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -42,8 +51,6 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const [searchSuggestions, setSearchSuggestions] = useState([]);
-
-
 
   const [logOutUser, { data, isSuccess }] = useLogoutUserMutation();
   const navigate = useNavigate();
@@ -103,8 +110,6 @@ const Navbar = () => {
   }
     , [isSuccess])
 
-  
-
   return (
     <div className="h-16 glass-effect border-b border-border/50 fixed top-0 left-0 right-0 duration-300 z-50 backdrop-blur-md">
       {/*Desktop*/}
@@ -135,12 +140,9 @@ const Navbar = () => {
               Dashboard
             </Link>
           )}
-          {/* Only show My Learning for students */}
-          {user && user.role === "student" && (
-            <Link to="/my-learning" className="text-sm font-medium hover:text-primary transition-colors">
-              My Learning
-            </Link>
-          )}
+          <Link to="/my-learning" className="text-sm font-medium hover:text-primary transition-colors">
+            My Learning
+          </Link>
         </nav>
 
         {/* Search Bar with Suggestions */}
@@ -179,12 +181,7 @@ const Navbar = () => {
 
         {/* User Actions */}
         <div className="flex items-center gap-3">
-          {/* DEBUG */}
-          <div className="text-xs bg-yellow-200 p-1 rounded">
-            {user ? `User: ${user.name}` : 'No User'}
-          </div>
-
-          {true ? (
+          {user ? (
             <>
               {/* Notifications - Removed static notification for now */}
               {/* Future: Add dynamic notifications here */}
@@ -192,91 +189,73 @@ const Navbar = () => {
               {/* User Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button type="button" variant="ghost" className="relative h-10 w-10 rounded-full bg-red-800">
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={user?.photoUrl} alt={user?.name} />
+                      <AvatarImage src={user?.photoUrl || "https://github.com/shadcn.png"} alt={user?.name} />
                       <AvatarFallback className="bg-primary/10 text-primary">
                         {user?.name?.charAt(0) || "U"}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-64 bg-background/95 backdrop-blur-md border border-border/50 shadow-xl"
+                  align="end"
+                  sideOffset={5}
+                >
+                  <div className="p-3 border-b border-border/50">
+                    <p className="font-medium text-sm">{user?.name || "User"}</p>
+                    <p className="text-xs text-muted-foreground">{user?.email}</p>
+                  </div>
 
-                <DropdownMenuPortal>
-                  <DropdownMenuContent
-                    className="z-[9999] min-w-[12rem] overflow-hidden rounded-md border p-1 shadow-md bg-white text-black dark:bg-gray-900 dark:text-gray-100 border-border/50"
-                    align="end"
-                    sideOffset={6}
-                  >
-                    <div className="px-2 py-1.5 text-sm font-semibold">
-                      <p>{user?.name || "User"}</p>
-                      <p className="text-xs text-muted-foreground">{user?.email}</p>
-                    </div>
-
-                    <DropdownMenuSeparator className="h-px bg-border my-1" />
-
-                    <DropdownMenuItem className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground">
-                      <User size={16} className="mr-2" />
+                  <DropdownMenuGroup className="p-1">
+                    <DropdownMenuItem className="flex items-center gap-2 p-2 cursor-pointer">
+                      <User size={16} />
                       <Link to="/profile" className="flex-1">Profile</Link>
                     </DropdownMenuItem>
-
-                    {/* Student-specific options - Only show for students */}
-                    {user && user.role === "student" && (
-                      <DropdownMenuItem className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground">
-                        <BookOpen size={16} className="mr-2" />
-                        <Link to="/my-learning" className="flex-1">My Learning</Link>
-                      </DropdownMenuItem>
-                    )}
-
-                    <DropdownMenuItem className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground">
-                      <Settings size={16} className="mr-2" />
+                    <DropdownMenuItem className="flex items-center gap-2 p-2 cursor-pointer">
+                      <BookOpen size={16} />
+                      <Link to="/my-learning" className="flex-1">My Learning</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="flex items-center gap-2 p-2 cursor-pointer">
+                      <Settings size={16} />
                       <span>Settings</span>
                     </DropdownMenuItem>
+                  </DropdownMenuGroup>
 
-                    {user?.role === "instructor" && (
-                      <>
-                        <DropdownMenuSeparator className="h-px bg-border my-1" />
-                        <DropdownMenuItem className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground">
-                          <GraduationCap size={16} className="mr-2" />
+                  {user?.role === "instructor" && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuGroup className="p-1">
+                        <DropdownMenuItem className="flex items-center gap-2 p-2 cursor-pointer">
+                          <GraduationCap size={16} />
                           <Link to="/admin/dashboard" className="flex-1">Instructor Dashboard</Link>
                         </DropdownMenuItem>
-                      </>
-                    )}
+                      </DropdownMenuGroup>
+                    </>
+                  )}
 
-                    <DropdownMenuSeparator className="h-px bg-border my-1" />
-                    <DropdownMenuItem
-                      className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground text-red-600"
-                      onClick={logoutHandler}
-                    >
-                      <LogOut size={16} className="mr-2" />
-                      <span>Log out</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenuPortal>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="flex items-center gap-2 p-2 cursor-pointer text-red-600 focus:text-red-600"
+                    onClick={logoutHandler}
+                  >
+                    <LogOut size={16} />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
               </DropdownMenu>
             </>
           ) : (
             <div className="flex items-center gap-3">
-              <Button variant="ghost" onClick={() => navigate("/login")} className="bg-blue-100">
+              <Button variant="ghost" onClick={() => navigate("/login")}>
                 Log in
               </Button>
-              <Button onClick={() => navigate("/signup")} className="btn-primary">
+              <Button onClick={() => navigate("/login")} className="btn-primary">
                 Sign up
               </Button>
             </div>
           )}
-
-
-
-          {/* EMERGENCY BACKUP BUTTONS - ALWAYS VISIBLE */}
-          <div className="flex items-center gap-2 ml-2">
-            <Button variant="outline" onClick={() => navigate("/login")} className="bg-red-100 text-xs">
-              🚨 Login
-            </Button>
-            <Button onClick={() => navigate("/signup")} className="bg-red-500 text-white text-xs">
-              🚨 Signup
-            </Button>
-          </div>
 
           <DarkMode />
         </div>
@@ -364,15 +343,10 @@ const MobileNavbar = ({ user, logoutHandler }) => {
                   <BarChart3 size={18} />
                   <span className="font-medium">Dashboard</span>
                 </Link>
-
-                {/* Student-specific navigation - Only show for students */}
-                {user && user.role === "student" && (
-                  <Link to="/my-learning" className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors">
-                    <BookOpen size={18} />
-                    <span className="font-medium">My Learning</span>
-                  </Link>
-                )}
-
+                <Link to="/my-learning" className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors">
+                  <BookOpen size={18} />
+                  <span className="font-medium">My Learning</span>
+                </Link>
                 <Link to="/profile" className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors">
                   <User size={18} />
                   <span className="font-medium">Profile</span>
@@ -422,7 +396,7 @@ const MobileNavbar = ({ user, logoutHandler }) => {
                   Log in
                 </Button>
                 <Button
-                  onClick={() => navigate("/signup")}
+                  onClick={() => navigate("/login")}
                   className="w-full btn-primary"
                 >
                   Sign up
