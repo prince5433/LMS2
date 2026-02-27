@@ -31,35 +31,37 @@ const Navbar = () => {
   const { user } = useSelector((store) => store.auth);
   const [logoutUser, { data, isSuccess }] = useLogoutUserMutation();
   const navigate = useNavigate();
+
   const logoutHandler = async () => {
     await logoutUser();
   };
 
   useEffect(() => {
     if (isSuccess) {
-      toast.success(data?.message || "User log out.");
+      toast.success(data.message || "User log out.");
       navigate("/login");
     }
   }, [isSuccess]);
 
   return (
-    <div className="h-16 dark:bg-[#020817] bg-white border-b dark:border-b-gray-800 border-b-gray-200 fixed top-0 left-0 right-0 duration-300 z-10">
-      {/* Desktop */}
-      <div className="max-w-7xl mx-auto hidden md:flex justify-between items-center gap-10 h-full">
-        <div className="flex items-center gap-2">
-          <School size={"30"} />
+    <div className="h-16 glass border-b border-border/50 fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+      <div className="max-w-7xl mx-auto flex items-center justify-between h-full px-4 md:px-8">
+        {/* Logo */}
+        <div className="flex items-center gap-3">
+          <School size={28} className="text-indigo-500" />
           <Link to="/">
-            <h1 className="hidden md:block font-extrabold text-2xl">
+            <h1 className="hidden md:block font-extrabold text-2xl gradient-text">
               E-Learning
             </h1>
           </Link>
         </div>
-        {/* User icons and dark mode icon  */}
-        <div className="flex items-center gap-8">
+
+        {/* Desktop Nav */}
+        <div className="flex items-center gap-4">
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Avatar>
+                <Avatar className="cursor-pointer ring-2 ring-indigo-500/30 hover:ring-indigo-500/60 transition-all duration-300">
                   <AvatarImage
                     src={user?.photoUrl || "https://github.com/shadcn.png"}
                     alt="@shadcn"
@@ -67,57 +69,59 @@ const Navbar = () => {
                   <AvatarFallback>CN</AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuContent className="w-56 glass border border-border/50 shadow-xl">
+                <DropdownMenuLabel className="font-semibold">{user?.name || "My Account"}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                   {user?.role === "student" ? (
                     <>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer hover:bg-indigo-500/10 transition-colors">
                         <Link to="my-learning">My Learning</Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer hover:bg-indigo-500/10 transition-colors">
                         <Link to="/">Browse Courses</Link>
                       </DropdownMenuItem>
                     </>
                   ) : (
                     <>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer hover:bg-indigo-500/10 transition-colors">
                         <Link to="/admin/dashboard">Dashboard</Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer hover:bg-indigo-500/10 transition-colors">
                         <Link to="/admin/course">My Courses</Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer hover:bg-indigo-500/10 transition-colors">
                         <Link to="/admin/course/create">Create Course</Link>
                       </DropdownMenuItem>
                     </>
                   )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <Link to="profile">Edit Profile</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={logoutHandler}>
-                    Log out
+                  <DropdownMenuItem className="cursor-pointer hover:bg-indigo-500/10 transition-colors">
+                    <Link to="/profile">Edit Profile</Link>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logoutHandler} className="cursor-pointer text-red-500 hover:bg-red-500/10 transition-colors">
+                  Log out
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => navigate("/login")}>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" onClick={() => navigate("/login")} className="rounded-full border-indigo-500/30 hover:border-indigo-500 hover:bg-indigo-500/10 transition-all duration-300">
                 Login
               </Button>
-              <Button onClick={() => navigate("/login")}>Signup</Button>
+              <Button onClick={() => navigate("/login")} className="rounded-full gradient-btn text-white border-0">
+                Signup
+              </Button>
             </div>
           )}
           <DarkMode />
+
+          {/* Mobile Nav */}
+          <div className="md:hidden">
+            <MobileNavbar user={user} logoutHandler={logoutHandler} />
+          </div>
         </div>
-      </div>
-      {/* Mobile device  */}
-      <div className="flex md:hidden items-center justify-between px-4 h-full">
-        <h1 className="font-extrabold text-2xl">E-learning</h1>
-        <MobileNavbar user={user} logoutHandler={logoutHandler} />
       </div>
     </div>
   );
@@ -127,25 +131,22 @@ export default Navbar;
 
 const MobileNavbar = ({ user, logoutHandler }) => {
   const navigate = useNavigate();
-
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button
-          size="icon"
-          className="rounded-full hover:bg-gray-200"
-          variant="outline"
-        >
+        <Button size="icon" className="rounded-full" variant="outline">
           <Menu />
         </Button>
       </SheetTrigger>
-      <SheetContent className="flex flex-col">
+      <SheetContent className="flex flex-col glass">
         <SheetHeader className="flex flex-row items-center justify-between mt-2">
-          <SheetTitle> <Link to="/">E-Learning</Link></SheetTitle>
+          <SheetTitle>
+            <span className="gradient-text font-bold text-xl">E-Learning</span>
+          </SheetTitle>
           <DarkMode />
         </SheetHeader>
-        <Separator className="mr-2" />
-        <nav className="flex flex-col space-y-4">
+        <Separator className="my-2" />
+        <nav className="flex flex-col space-y-4 mt-4">
           {user?.role === "student" ? (
             <>
               <Link to="/my-learning">My Learning</Link>
@@ -159,8 +160,25 @@ const MobileNavbar = ({ user, logoutHandler }) => {
             </>
           )}
           <Link to="/profile">Edit Profile</Link>
-          <p onClick={logoutHandler}>Log out</p>
         </nav>
+        <SheetFooter className="mt-auto">
+          <SheetClose asChild>
+            {user ? (
+              <Button onClick={logoutHandler} variant="destructive" className="rounded-full w-full">
+                Log out
+              </Button>
+            ) : (
+              <div className="flex flex-col gap-2 w-full">
+                <Button variant="outline" onClick={() => navigate("/login")} className="rounded-full">
+                  Login
+                </Button>
+                <Button onClick={() => navigate("/login")} className="rounded-full gradient-btn text-white border-0">
+                  Signup
+                </Button>
+              </div>
+            )}
+          </SheetClose>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

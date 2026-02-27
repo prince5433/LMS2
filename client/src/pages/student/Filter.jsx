@@ -36,8 +36,8 @@ const Filter = ({ handleFilterChange }) => {
         ? prevCategories.filter((id) => id !== categoryId)
         : [...prevCategories, categoryId];
 
-        handleFilterChange(newCategories, sortByPrice);
-        return newCategories;
+      handleFilterChange(newCategories, sortByPrice);
+      return newCategories;
     });
   };
 
@@ -47,10 +47,10 @@ const Filter = ({ handleFilterChange }) => {
   }
   return (
     <div className="w-full md:w-[20%]">
-      <div className="flex items-center justify-between">
-        <h1 className="font-semibold text-lg md:text-xl">Filter Options</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="font-bold text-lg">Filters</h1>
         <Select onValueChange={selectByPriceHandler}>
-          <SelectTrigger>
+          <SelectTrigger className="w-[140px] rounded-lg">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
@@ -62,16 +62,17 @@ const Filter = ({ handleFilterChange }) => {
           </SelectContent>
         </Select>
       </div>
-      <Separator className="my-4" />
+      <Separator className="mb-4" />
       <div>
-        <h1 className="font-semibold mb-2">CATEGORY</h1>
+        <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider mb-3">Category</h2>
         {categories.map((category) => (
-          <div className="flex items-center space-x-2 my-2">
+          <div key={category.id} className="flex items-center space-x-2 my-2.5 px-2 py-1.5 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
             <Checkbox
               id={category.id}
               onCheckedChange={() => handleCategoryChange(category.id)}
+              className="data-[state=checked]:bg-indigo-500 data-[state=checked]:border-indigo-500"
             />
-            <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <Label className="text-sm font-medium leading-none cursor-pointer">
               {category.label}
             </Label>
           </div>
