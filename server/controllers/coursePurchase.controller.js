@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import mongoose from 'mongoose';
 import { Course } from "../models/course.model.js";
 import { CoursePurchase } from "../models/coursePurchase.model.js";
 import { Lecture } from "../models/lecture.model.js";
@@ -39,9 +40,9 @@ export const createCheckoutSession = async (req, res) => {
         },
       ],
       mode: "payment",
-    // Update success_url and cancel_url
-success_url: `${process.env.FRONTEND_URL}/course-progress/${courseId}`,
-cancel_url: `${process.env.FRONTEND_URL}/course-detail/${courseId}`,
+      // Update success_url and cancel_url
+      success_url: `${process.env.FRONTEND_URL}/course-progress/${courseId}`,
+      cancel_url: `${process.env.FRONTEND_URL}/course-detail/${courseId}`,
       metadata: {
         courseId: courseId,
         userId: userId,
@@ -67,6 +68,7 @@ cancel_url: `${process.env.FRONTEND_URL}/course-detail/${courseId}`,
     });
   } catch (error) {
     console.log(error);
+    return res.status(500).json({ message: "Failed to create checkout session" });
   }
 };
 
@@ -138,7 +140,7 @@ export const stripeWebhook = async (req, res) => {
   }
   res.status(200).send();
 };
-import mongoose from 'mongoose';
+
 
 export const getCourseDetailWithPurchaseStatus = async (req, res) => {
   try {
@@ -170,9 +172,9 @@ export const getCourseDetailWithPurchaseStatus = async (req, res) => {
     });
   } catch (error) {
     console.error('Error in getCourseDetailWithPurchaseStatus:', error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       message: "An error occurred while fetching course details",
-      error: error.message 
+      error: error.message
     });
   }
 };
@@ -192,5 +194,6 @@ export const getAllPurchasedCourse = async (_, res) => {
     });
   } catch (error) {
     console.log(error);
+    return res.status(500).json({ message: "Failed to get purchased courses" });
   }
 };

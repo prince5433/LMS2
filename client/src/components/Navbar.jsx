@@ -77,7 +77,7 @@ const Navbar = () => {
                         <Link to="my-learning">My Learning</Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem>
-                        <Link to="courses">Browse Courses</Link>
+                        <Link to="/">Browse Courses</Link>
                       </DropdownMenuItem>
                     </>
                   ) : (
@@ -89,7 +89,7 @@ const Navbar = () => {
                         <Link to="/admin/course">My Courses</Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem>
-                        <Link to="/admin/course/add">Create Course</Link>
+                        <Link to="/admin/course/create">Create Course</Link>
                       </DropdownMenuItem>
                     </>
                   )}
@@ -117,7 +117,7 @@ const Navbar = () => {
       {/* Mobile device  */}
       <div className="flex md:hidden items-center justify-between px-4 h-full">
         <h1 className="font-extrabold text-2xl">E-learning</h1>
-        <MobileNavbar user={user}/>
+        <MobileNavbar user={user} logoutHandler={logoutHandler} />
       </div>
     </div>
   );
@@ -125,9 +125,9 @@ const Navbar = () => {
 
 export default Navbar;
 
-const MobileNavbar = ({user}) => {
+const MobileNavbar = ({ user, logoutHandler }) => {
   const navigate = useNavigate();
-  
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -149,13 +149,13 @@ const MobileNavbar = ({user}) => {
           {user?.role === "student" ? (
             <>
               <Link to="/my-learning">My Learning</Link>
-              <Link to="/courses">Browse Courses</Link>
+              <Link to="/">Browse Courses</Link>
             </>
           ) : (
             <>
               <Link to="/admin/dashboard">Dashboard</Link>
               <Link to="/admin/course">My Courses</Link>
-              <Link to="/admin/course/add">Create Course</Link>
+              <Link to="/admin/course/create">Create Course</Link>
             </>
           )}
           <Link to="/profile">Edit Profile</Link>

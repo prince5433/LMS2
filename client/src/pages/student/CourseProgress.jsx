@@ -100,26 +100,28 @@ const CourseProgress = () => {
         {/* Video section  */}
         <div className="flex-1 md:w-3/5 h-fit rounded-lg shadow-lg p-4">
           <div>
-            <video
-              src={currentLecture?.videoUrl || initialLecture.videoUrl}
-              controls
-              className="w-full h-auto md:rounded-lg"
-              onPlay={() =>
-                handleLectureProgress(currentLecture?._id || initialLecture._id)
-              }
-            />
+            {(currentLecture?.videoUrl || initialLecture?.videoUrl) ? (
+              <video
+                src={currentLecture?.videoUrl || initialLecture?.videoUrl}
+                controls
+                className="w-full h-auto md:rounded-lg"
+                onPlay={() =>
+                  handleLectureProgress(currentLecture?._id || initialLecture?._id)
+                }
+              />
+            ) : (
+              <p className="text-center text-gray-500 py-10">No video available</p>
+            )}
           </div>
           {/* Display current watching lecture title */}
           <div className="mt-2 ">
             <h3 className="font-medium text-lg">
-              {`Lecture ${
-                courseDetails.lectures.findIndex(
-                  (lec) =>
-                    lec._id === (currentLecture?._id || initialLecture._id)
-                ) + 1
-              } : ${
-                currentLecture?.lectureTitle || initialLecture.lectureTitle
-              }`}
+              {initialLecture ? `Lecture ${courseDetails.lectures.findIndex(
+                (lec) =>
+                  lec._id === (currentLecture?._id || initialLecture?._id)
+              ) + 1
+                } : ${currentLecture?.lectureTitle || initialLecture?.lectureTitle
+                }` : "No lectures available"}
             </h3>
           </div>
         </div>
@@ -130,11 +132,10 @@ const CourseProgress = () => {
             {courseDetails?.lectures.map((lecture) => (
               <Card
                 key={lecture._id}
-                className={`mb-3 hover:cursor-pointer transition transform ${
-                  lecture._id === currentLecture?._id
+                className={`mb-3 hover:cursor-pointer transition transform ${lecture._id === currentLecture?._id
                     ? "bg-gray-200 dark:dark:bg-gray-800"
                     : ""
-                } `}
+                  } `}
                 onClick={() => handleSelectLecture(lecture)}
               >
                 <CardContent className="flex items-center justify-between p-4">
