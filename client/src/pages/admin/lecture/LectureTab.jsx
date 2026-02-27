@@ -17,7 +17,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 
-const MEDIA_API = "http://localhost:8080/api/v1/media";
+const MEDIA_API = `${import.meta.env.VITE_API_BASE_URL}/api/v1/media`;
 
 const LectureTab = () => {
   const [lectureTitle, setLectureTitle] = useState("");
@@ -36,7 +36,13 @@ const LectureTab = () => {
     if(lecture){
       setLectureTitle(lecture.lectureTitle);
       setIsFree(lecture.isPreviewFree);
-      setUploadVideoInfo(lecture.videoInfo)
+      if(lecture.videoUrl){
+        setUploadVideoInfo({
+          videoUrl: lecture.videoUrl,
+          publicId: lecture.publicId,
+        });
+        setBtnDisable(false);
+      }
     }
   },[lecture])
 
@@ -52,6 +58,7 @@ const LectureTab = () => {
       setMediaProgress(true);
       try {
         const res = await axios.post(`${MEDIA_API}/upload-video`, formData, {
+          withCredentials: true,
           onUploadProgress: ({ loaded, total }) => {
             setUploadProgress(Math.round((loaded * 100) / total));
           },
@@ -60,7 +67,7 @@ const LectureTab = () => {
         if (res.data.success) {
           console.log(res);
           setUploadVideoInfo({
-            videoUrl: res.data.data.url,
+            videoUrl: res.data.data.secure_url,
             publicId: res.data.data.public_id,
           });
           setBtnDisable(false);
@@ -148,6 +155,18 @@ const LectureTab = () => {
             className="w-fit"
           />
         </div>
+
+        {uploadVideInfo?.videoUrl && (
+          <div className="my-4">
+            <Label>Video Preview</Label>
+            <video
+              src={uploadVideInfo.videoUrl}
+              controls
+              className="w-full max-w-md rounded-lg mt-2"
+            />
+          </div>
+        )}
+
         <div className="flex items-center space-x-2 my-5">
           <Switch checked={isFree} onCheckedChange={setIsFree} id="airplane-mode" />
           <Label htmlFor="airplane-mode">Is this video FREE</Label>
@@ -161,7 +180,7 @@ const LectureTab = () => {
         )}
 
         <div className="mt-4">
-          <Button disabled={isLoading} onClick={editLectureHandler}>
+          <Button disabled={isLoading || btnDisable} onClick={editLectureHandler}>
               {
                 isLoading ? <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin"/>

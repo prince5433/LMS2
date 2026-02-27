@@ -10,6 +10,7 @@ import {
 import { useVerifyPurchaseMutation } from "@/features/api/purchaseApi";
 import { CheckCircle, CheckCircle2, CirclePlay } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import ReactPlayer from "react-player";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -111,14 +112,18 @@ const CourseProgress = () => {
         <div className="flex-1 md:w-3/5 h-fit rounded-lg shadow-lg p-4">
           <div>
             {(currentLecture?.videoUrl || initialLecture?.videoUrl) ? (
-              <video
-                src={currentLecture?.videoUrl || initialLecture?.videoUrl}
-                controls
-                className="w-full h-auto md:rounded-lg"
-                onPlay={() =>
-                  handleLectureProgress(currentLecture?._id || initialLecture?._id)
-                }
-              />
+              <div className="aspect-video">
+                <ReactPlayer
+                  url={currentLecture?.videoUrl || initialLecture?.videoUrl}
+                  controls
+                  width="100%"
+                  height="100%"
+                  className="rounded-lg"
+                  onPlay={() =>
+                    handleLectureProgress(currentLecture?._id || initialLecture?._id)
+                  }
+                />
+              </div>
             ) : (
               <p className="text-center text-gray-500 py-10">No video available</p>
             )}

@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
 import "./App.css";
 import Login from "./pages/Login";
 import HeroSection from "./pages/student/HeroSection";
@@ -20,9 +20,25 @@ import {
   AdminRoute,
   AuthenticatedUser,
   ProtectedRoute,
+  StudentRoute,
 } from "./components/ProtectedRoutes";
 import PurchaseCourseProtectedRoute from "./components/PurchaseCourseProtectedRoute";
 import { ThemeProvider } from "./components/ThemeProvider";
+import { useSelector } from "react-redux";
+
+// Redirects instructor to admin dashboard from home page
+const HomePage = () => {
+  const { user } = useSelector((store) => store.auth);
+  if (user?.role === "instructor") {
+    return <Navigate to="/admin/dashboard" />;
+  }
+  return (
+    <>
+      <HeroSection />
+      <Courses />
+    </>
+  );
+};
 
 const appRouter = createBrowserRouter([
   {
@@ -31,12 +47,7 @@ const appRouter = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: (
-          <>
-            <HeroSection />
-            <Courses />
-          </>
-        ),
+        element: <HomePage />,
       },
       {
         path: "login",
@@ -50,7 +61,9 @@ const appRouter = createBrowserRouter([
         path: "my-learning",
         element: (
           <ProtectedRoute>
-            <MyLearning />
+            <StudentRoute>
+              <MyLearning />
+            </StudentRoute>
           </ProtectedRoute>
         ),
       },
@@ -66,7 +79,9 @@ const appRouter = createBrowserRouter([
         path: "course/search",
         element: (
           <ProtectedRoute>
-            <SearchPage />
+            <StudentRoute>
+              <SearchPage />
+            </StudentRoute>
           </ProtectedRoute>
         ),
       },
@@ -74,7 +89,9 @@ const appRouter = createBrowserRouter([
         path: "course-detail/:courseId",
         element: (
           <ProtectedRoute>
-            <CourseDetail />
+            <StudentRoute>
+              <CourseDetail />
+            </StudentRoute>
           </ProtectedRoute>
         ),
       },
@@ -82,9 +99,11 @@ const appRouter = createBrowserRouter([
         path: "course-progress/:courseId",
         element: (
           <ProtectedRoute>
-            <PurchaseCourseProtectedRoute>
-            <CourseProgress />
-            </PurchaseCourseProtectedRoute>
+            <StudentRoute>
+              <PurchaseCourseProtectedRoute>
+                <CourseProgress />
+              </PurchaseCourseProtectedRoute>
+            </StudentRoute>
           </ProtectedRoute>
         ),
       },

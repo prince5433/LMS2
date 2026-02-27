@@ -12,10 +12,12 @@ export const uploadMedia = async (file) => {
   try {
     const uploadResponse = await cloudinary.uploader.upload(file, {
       resource_type: "auto",
+      timeout: 120000, // 2 minute timeout for large video files
     });
     return uploadResponse;
   } catch (error) {
-    console.log(error);
+    console.log("Cloudinary upload error:", error);
+    throw error; // re-throw so caller knows upload failed
   }
 };
 

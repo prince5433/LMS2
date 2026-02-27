@@ -33,3 +33,18 @@ export const AdminRoute = ({children}) => {
 
     return children;
 }
+
+// Blocks instructors from accessing student-only pages
+export const StudentRoute = ({children}) => {
+    const {user, isAuthenticated} = useSelector(store=>store.auth);
+
+    if(!isAuthenticated){
+        return <Navigate to="/login"/>
+    }
+
+    if(user?.role === "instructor"){
+        return <Navigate to="/admin/dashboard"/>
+    }
+
+    return children;
+}

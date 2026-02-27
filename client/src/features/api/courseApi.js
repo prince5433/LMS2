@@ -93,6 +93,7 @@ export const courseApi = createApi({
         method: "POST",
         body: { lectureTitle, videoInfo, isPreviewFree },
       }),
+      invalidatesTags: ["Refetch_Lecture"],
     }),
     removeLecture: builder.mutation({
       query: (lectureId) => ({
