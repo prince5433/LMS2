@@ -28,6 +28,12 @@ export const purchaseApi = createApi({
         method: "GET",
       }),
     }),
+    verifyPurchase: builder.mutation({
+      query: (courseId) => ({
+        url: `/verify/${courseId}`,
+        method: "POST",
+      }),
+    }),
   }),
 });
 
@@ -35,4 +41,5 @@ export const {
   useCreateCheckoutSessionMutation,
   useGetCourseDetailWithStatusQuery,
   useGetPurchasedCoursesQuery,
+  useVerifyPurchaseMutation,
 } = purchaseApi;

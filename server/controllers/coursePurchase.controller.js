@@ -197,3 +197,68 @@ export const getAllPurchasedCourse = async (_, res) => {
     return res.status(500).json({ message: "Failed to get purchased courses" });
   }
 };
+
+export const verifyPurchase = async (req, res) => {
+  try {
+    const userId = req.id;
+    const { courseId } = req.params;
+
+    const purchase = await CoursePurchase.findOne({
+      userId,
+      courseId,
+      status: "pending",
+    });
+
+    if (!purchase) {
+      // Check if already completed
+      const completedPurchase = await CoursePurchase.findOne({
+        userId,
+        courseId,
+        status: "completed",
+      });
+      if (completedPurchase) {
+        return res.status(200).json({ success: true, message: "Already enrolled" });
+      }
+      return res.status(404).json({ message: "Purchase not found" });
+    }
+
+    // Verify with Stripe
+    const session = await stripe.checkout.sessions.retrieve(purchase.paymentId);
+
+    if (session.payment_status === "paid") {
+      purchase.status = "completed";
+      purchase.amount = session.amount_total / 100;
+      await purchase.save();
+
+      // Enroll user in course
+      await User.findByIdAndUpdate(
+        userId,
+        { $addToSet: { enrolledCourses: courseId } },
+        { new: true }
+      );
+
+      // Add user to course's enrolledStudents
+      await Course.findByIdAndUpdate(
+        courseId,
+        { $addToSet: { enrolledStudents: userId } },
+        { new: true }
+      );
+
+      // Make lectures visible
+      const course = await Course.findById(courseId);
+      if (course && course.lectures.length > 0) {
+        await Lecture.updateMany(
+          { _id: { $in: course.lectures } },
+          { $set: { isPreviewFree: true } }
+        );
+      }
+
+      return res.status(200).json({ success: true, message: "Course purchased successfully" });
+    } else {
+      return res.status(400).json({ message: "Payment not completed" });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Failed to verify purchase" });
+  }
+};

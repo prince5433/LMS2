@@ -7,6 +7,7 @@ import {
   useInCompleteCourseMutation,
   useUpdateLectureProgressMutation,
 } from "@/features/api/courseProgressApi";
+import { useVerifyPurchaseMutation } from "@/features/api/purchaseApi";
 import { CheckCircle, CheckCircle2, CirclePlay } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -15,6 +16,15 @@ import { toast } from "sonner";
 const CourseProgress = () => {
   const params = useParams();
   const courseId = params.courseId;
+
+  // Verify purchase on page load (handles Stripe redirect)
+  const [verifyPurchase] = useVerifyPurchaseMutation();
+  useEffect(() => {
+    if (courseId) {
+      verifyPurchase(courseId);
+    }
+  }, [courseId]);
+
   const { data, isLoading, isError, refetch } =
     useGetCourseProgressQuery(courseId);
 
@@ -133,8 +143,8 @@ const CourseProgress = () => {
               <Card
                 key={lecture._id}
                 className={`mb-3 hover:cursor-pointer transition transform ${lecture._id === currentLecture?._id
-                    ? "bg-gray-200 dark:dark:bg-gray-800"
-                    : ""
+                  ? "bg-gray-200 dark:dark:bg-gray-800"
+                  : ""
                   } `}
                 onClick={() => handleSelectLecture(lecture)}
               >
