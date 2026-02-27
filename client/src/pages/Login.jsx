@@ -25,6 +25,7 @@ const Login = () => {
     name: "",
     email: "",
     password: "",
+    role: "student" // default role
   });
   const [loginInput, setLoginInput] = useState({ email: "", password: "" });
 
@@ -134,6 +135,19 @@ const Login = () => {
                   placeholder="Eg. xyz"
                   required="true"
                 />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="role">Role</Label>
+                <select
+                  name="role"
+                  value={signupInput.role}
+                  onChange={(e) => changeInputHandler(e, "signup")}
+                  className="w-full px-3 py-2 border rounded-md"
+                  required="true"
+                >
+                  <option value="student">Student</option>
+                  <option value="instructor">Instructor</option>
+                </select>
               </div>
             </CardContent>
             <CardFooter>

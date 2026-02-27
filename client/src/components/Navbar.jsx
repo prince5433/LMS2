@@ -71,23 +71,36 @@ const Navbar = () => {
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
+                  {user?.role === "student" ? (
+                    <>
+                      <DropdownMenuItem>
+                        <Link to="my-learning">My Learning</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Link to="courses">Browse Courses</Link>
+                      </DropdownMenuItem>
+                    </>
+                  ) : (
+                    <>
+                      <DropdownMenuItem>
+                        <Link to="/admin/dashboard">Dashboard</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Link to="/admin/course">My Courses</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Link to="/admin/course/add">Create Course</Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem>
-                    <Link to="my-learning">My learning</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    {" "}
-                    <Link to="profile">Edit Profile</Link>{" "}
+                    <Link to="profile">Edit Profile</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={logoutHandler}>
                     Log out
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
-                {user?.role === "instructor" && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem><Link to="/admin/dashboard">Dashboard</Link></DropdownMenuItem>
-                  </>
-                )}
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
@@ -133,17 +146,21 @@ const MobileNavbar = ({user}) => {
         </SheetHeader>
         <Separator className="mr-2" />
         <nav className="flex flex-col space-y-4">
-          <Link to="/my-learning">My Learning</Link>
+          {user?.role === "student" ? (
+            <>
+              <Link to="/my-learning">My Learning</Link>
+              <Link to="/courses">Browse Courses</Link>
+            </>
+          ) : (
+            <>
+              <Link to="/admin/dashboard">Dashboard</Link>
+              <Link to="/admin/course">My Courses</Link>
+              <Link to="/admin/course/add">Create Course</Link>
+            </>
+          )}
           <Link to="/profile">Edit Profile</Link>
-          <p>Log out</p>
+          <p onClick={logoutHandler}>Log out</p>
         </nav>
-        {user?.role === "instructor" && (
-          <SheetFooter>
-            <SheetClose asChild>
-              <Button type="submit" onClick={()=> navigate("/admin/dashboard")}>Dashboard</Button>
-            </SheetClose>
-          </SheetFooter>
-        )}
       </SheetContent>
     </Sheet>
   );

@@ -6,7 +6,7 @@ import { deleteMediaFromCloudinary, uploadMedia } from "../utils/cloudinary.js";
 export const register = async (req,res) => {
     try {
        
-        const {name, email, password} = req.body; // patel214
+        const {name, email, password, role} = req.body;
         if(!name || !email || !password){
             return res.status(400).json({
                 success:false,
@@ -24,7 +24,8 @@ export const register = async (req,res) => {
         await User.create({
             name,
             email,
-            password:hashedPassword
+            password: hashedPassword,
+            role: role || 'student' // default to student if role not provided
         });
         return res.status(201).json({
             success:true,

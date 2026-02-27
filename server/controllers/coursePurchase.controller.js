@@ -39,8 +39,9 @@ export const createCheckoutSession = async (req, res) => {
         },
       ],
       mode: "payment",
-      success_url: `http://localhost:5173/course-progress/${courseId}`, // once payment successful redirect to course progress page
-      cancel_url: `http://localhost:5173/course-detail/${courseId}`,
+    // Update success_url and cancel_url
+success_url: `${process.env.FRONTEND_URL}/course-progress/${courseId}`,
+cancel_url: `${process.env.FRONTEND_URL}/course-detail/${courseId}`,
       metadata: {
         courseId: courseId,
         userId: userId,
@@ -137,28 +138,42 @@ export const stripeWebhook = async (req, res) => {
   }
   res.status(200).send();
 };
+import mongoose from 'mongoose';
+
 export const getCourseDetailWithPurchaseStatus = async (req, res) => {
   try {
     const { courseId } = req.params;
     const userId = req.id;
 
+    if (!courseId) {
+      return res.status(400).json({ message: "Course ID is required" });
+    }
+
+    // Validate if courseId is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      return res.status(400).json({ message: "Invalid course ID format" });
+    }
+
     const course = await Course.findById(courseId)
       .populate({ path: "creator" })
       .populate({ path: "lectures" });
 
-    const purchased = await CoursePurchase.findOne({ userId, courseId });
-    console.log(purchased);
-
     if (!course) {
-      return res.status(404).json({ message: "course not found!" });
+      return res.status(404).json({ message: "Course not found!" });
     }
+
+    const purchased = await CoursePurchase.findOne({ userId, courseId });
 
     return res.status(200).json({
       course,
       purchased: !!purchased, // true if purchased, false otherwise
     });
   } catch (error) {
-    console.log(error);
+    console.error('Error in getCourseDetailWithPurchaseStatus:', error);
+    return res.status(500).json({ 
+      message: "An error occurred while fetching course details",
+      error: error.message 
+    });
   }
 };
 

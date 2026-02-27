@@ -3,9 +3,9 @@ import dotenv from "dotenv";
 dotenv.config({});
 
 cloudinary.config({
-  api_key: process.env.API_KEY,
-  api_secret: process.env.API_SECRET,
-  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
 });
 
 export const uploadMedia = async (file) => {
@@ -18,6 +18,7 @@ export const uploadMedia = async (file) => {
     console.log(error);
   }
 };
+
 export const deleteMediaFromCloudinary = async (publicId) => {
   try {
     await cloudinary.uploader.destroy(publicId);
@@ -27,11 +28,11 @@ export const deleteMediaFromCloudinary = async (publicId) => {
 };
 
 export const deleteVideoFromCloudinary = async (publicId) => {
-    try {
-        await cloudinary.uploader.destroy(publicId,{resource_type:"video"});
-    } catch (error) {
-        console.log(error);
-        
-    }
-}
-
+  try {
+    await cloudinary.uploader.destroy(publicId, {
+      resource_type: "video"
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};

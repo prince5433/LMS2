@@ -19,11 +19,21 @@ const CourseDetail = () => {
   const params = useParams();
   const courseId = params.courseId;
   const navigate = useNavigate();
-  const { data, isLoading, isError } =
-    useGetCourseDetailWithStatusQuery(courseId);
+  
+  // Validate MongoDB ObjectId format (24 character hex string)
+  const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(courseId);
+  
+  const { data, isLoading, isError, error } = useGetCourseDetailWithStatusQuery(courseId, {
+    skip: !courseId || !isValidObjectId // Skip the query if courseId is not available or invalid
+  });
 
+  if (!courseId) return <h1>No course ID provided</h1>;
+  if (!isValidObjectId) {
+    console.error('Invalid course ID format');
+    return <h1>Invalid course ID format</h1>;
+  }
   if (isLoading) return <h1>Loading...</h1>;
-  if (isError) return <h>Failed to load course details</h>;
+  if (isError) return <h1>Error: {error?.data?.message || 'Failed to load course details'}</h1>;
 
   const { course, purchased } = data;
   console.log(purchased);
@@ -34,25 +44,32 @@ const CourseDetail = () => {
     }
   }
 
+  if (!course) {
+    return <div>No course data available</div>;
+  }
+
+  const formattedDate = course.createdAt ? new Date(course.createdAt).toLocaleDateString() : 'Date not available';
+  const firstLecture = course.lectures && course.lectures.length > 0 ? course.lectures[0] : null;
+
   return (
     <div className="space-y-5">
       <div className="bg-[#2D2F31] text-white">
         <div className="max-w-7xl mx-auto py-8 px-4 md:px-8 flex flex-col gap-2">
           <h1 className="font-bold text-2xl md:text-3xl">
-            {course?.courseTitle}
+            {course.courseTitle || 'Untitled Course'}
           </h1>
           <p className="text-base md:text-lg">Course Sub-title</p>
           <p>
-            Created By{" "}
+            Created by{" "}
             <span className="text-[#C0C4FC] underline italic">
-              {course?.creator.name}
+              {course.creator?.name || 'Unknown Creator'}
             </span>
           </p>
           <div className="flex items-center gap-2 text-sm">
             <BadgeInfo size={16} />
-            <p>Last updated {course?.createdAt.split("T")[0]}</p>
+            <p>Last updated {formattedDate}</p>
           </div>
-          <p>Students enrolled: {course?.enrolledStudents.length}</p>
+          <p>Students enrolled: {course.enrolledStudents?.length || 0}</p>
         </div>
       </div>
       <div className="max-w-7xl mx-auto my-5 px-4 md:px-8 flex flex-col lg:flex-row justify-between gap-10">
@@ -60,39 +77,43 @@ const CourseDetail = () => {
           <h1 className="font-bold text-xl md:text-2xl">Description</h1>
           <p
             className="text-sm"
-            dangerouslySetInnerHTML={{ __html: course.description }}
+            dangerouslySetInnerHTML={{ __html: course.description || 'No description available' }}
           />
           <Card>
             <CardHeader>
               <CardTitle>Course Content</CardTitle>
-              <CardDescription>4 lectures</CardDescription>
+              <CardDescription>{course.lectures?.length || 0} lectures</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {course.lectures.map((lecture, idx) => (
+              {course.lectures?.map((lecture, idx) => (
                 <div key={idx} className="flex items-center gap-3 text-sm">
                   <span>
-                    {true ? <PlayCircle size={14} /> : <Lock size={14} />}
+                    {lecture.isPreviewFree ? <PlayCircle size={14} /> : <Lock size={14} />}
                   </span>
-                  <p>{lecture.lectureTitle}</p>
+                  <p>{lecture.lectureTitle || `Lecture ${idx + 1}`}</p>
                 </div>
-              ))}
+              )) || <p>No lectures available</p>}
             </CardContent>
           </Card>
         </div>
         <div className="w-full lg:w-1/3">
           <Card>
             <CardContent className="p-4 flex flex-col">
-              <div className="w-full aspect-video mb-4">
-                <ReactPlayer
-                  width="100%"
-                  height={"100%"}
-                  url={course.lectures[0].videoUrl}
-                  controls={true}
-                />
-              </div>
-              <h1>Lecture title</h1>
+              {firstLecture && (
+                <div className="w-full aspect-video mb-4">
+                  <ReactPlayer
+                    width="100%"
+                    height={"100%"}
+                    url={firstLecture.videoUrl}
+                    controls={true}
+                  />
+                </div>
+              )}
+              <h1>{firstLecture?.lectureTitle || 'No lecture available'}</h1>
               <Separator className="my-2" />
-              <h1 className="text-lg md:text-xl font-semibold">Course Price</h1>
+              <h1 className="text-lg md:text-xl font-semibold">
+                Price: ₹{course.coursePrice || 'Not set'}
+              </h1>
             </CardContent>
             <CardFooter className="flex justify-center p-4">
               {purchased ? (
